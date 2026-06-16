@@ -1,0 +1,112 @@
+{% extends 'base.html' %}
+
+{% block title %}
+Flight Details | {{ airport.name }}
+{% endblock %}
+
+{% block content %}
+
+<section class="page-section">
+
+    <div class="container py-5">
+
+        <div class="page-header text-center mb-4">
+
+            <h1>
+                <i class="bi bi-airplane"></i>
+                Flight Details
+            </h1>
+
+            <p>
+                {{ airport.name }}
+            </p>
+
+        </div>
+
+        <div class="glass-card p-4">
+
+            <div class="table-responsive">
+
+                <table class="table table-hover align-middle">
+
+                    <thead>
+
+                        <tr>
+                            <th>Flight No</th>
+                            <th>Airline</th>
+                            <th>Source</th>
+                            <th>Destination</th>
+                            <th>Departure</th>
+                            <th>Arrival</th>
+                            <th>Gate</th>
+                            <th>Status</th>
+                        </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                        {% for flight in flights %}
+
+                        <tr>
+
+                            <td>
+                                <strong>
+                                    {{ flight.flight_no }}
+                                </strong>
+                            </td>
+
+                            <td>{{ flight.airline }}</td>
+
+                            <td>{{ flight.source }}</td>
+
+                            <td>{{ flight.destination }}</td>
+
+                            <td>{{ flight.departure_time }}</td>
+
+                            <td>{{ flight.arrival_time }}</td>
+
+                            <td>{{ flight.gate }}</td>
+
+                            <td>
+
+                                {% if flight.status == "On Time" %}
+                                    <span class="badge bg-success">
+                                        {{ flight.status }}
+                                    </span>
+
+                                {% elif flight.status == "Delayed" %}
+                                    <span class="badge bg-danger">
+                                        {{ flight.status }}
+                                    </span>
+
+                                {% elif flight.status == "Boarding" %}
+                                    <span class="badge bg-primary">
+                                        {{ flight.status }}
+                                    </span>
+
+                                {% else %}
+                                    <span class="badge bg-warning text-dark">
+                                        {{ flight.status }}
+                                    </span>
+                                {% endif %}
+
+                            </td>
+
+                        </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+{% endblock %}

@@ -1,0 +1,115 @@
+{% extends 'base.html' %}
+
+{% block title %}
+Delayed Flights | {{ airport.name }}
+{% endblock %}
+
+{% block content %}
+
+<section class="page-section">
+
+    <div class="container py-5">
+
+        <div class="page-header text-center mb-4">
+
+            <h1>
+                <i class="bi bi-exclamation-triangle-fill"></i>
+                Delayed Flights
+            </h1>
+
+            <p>
+                {{ airport.name }}
+            </p>
+
+        </div>
+
+        <div class="glass-card p-4">
+
+            {% if flights %}
+
+            <div class="table-responsive">
+
+                <table class="table table-hover align-middle">
+
+                    <thead>
+
+                        <tr>
+                            <th>Flight No</th>
+                            <th>Airline</th>
+                            <th>Source</th>
+                            <th>Destination</th>
+                            <th>Departure</th>
+                            <th>Gate</th>
+                            <th>Status</th>
+                            <th>Remarks</th>
+                        </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                        {% for flight in flights %}
+
+                        <tr>
+
+                            <td>
+                                <strong>
+                                    {{ flight.flight_no }}
+                                </strong>
+                            </td>
+
+                            <td>{{ flight.airline }}</td>
+
+                            <td>{{ flight.source }}</td>
+
+                            <td>{{ flight.destination }}</td>
+
+                            <td>{{ flight.departure_time }}</td>
+
+                            <td>{{ flight.gate }}</td>
+
+                            <td>
+                                <span class="badge bg-danger">
+                                    Delayed
+                                </span>
+                            </td>
+
+                            <td>
+                                Operational Delay
+                            </td>
+
+                        </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+            {% else %}
+
+            <div class="text-center py-5">
+
+                <i class="bi bi-check-circle-fill display-1 text-success"></i>
+
+                <h3 class="mt-3">
+                    No Delayed Flights
+                </h3>
+
+                <p>
+                    All flights are operating normally.
+                </p>
+
+            </div>
+
+            {% endif %}
+
+        </div>
+
+    </div>
+
+</section>
+
+{% endblock %}

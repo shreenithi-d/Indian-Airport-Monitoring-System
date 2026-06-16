@@ -1,0 +1,148 @@
+{% extends 'base.html' %}
+
+{% block title %}
+Ticket Availability | {{ flight_no }}
+{% endblock %}
+
+{% block content %}
+
+<section class="page-section">
+
+    <div class="container py-5">
+
+        <div class="text-center mb-5">
+
+            <h1>
+                <i class="bi bi-ticket-perforated-fill"></i>
+                Ticket Availability
+            </h1>
+
+            <h4 class="mt-3">
+                Flight {{ flight_no }}
+            </h4>
+
+            <p>
+                {{ airport.name }}
+            </p>
+
+        </div>
+
+        <div class="row g-4 justify-content-center">
+
+            {% for ticket in tickets %}
+
+            <div class="col-lg-4 col-md-6">
+
+                <div class="ticket-card">
+
+                    <div class="ticket-header">
+
+                        <h3>
+                            {{ ticket.class }}
+                        </h3>
+
+                    </div>
+
+                    <div class="ticket-body">
+
+                        <div class="ticket-item">
+
+                            <h6>
+                                Available Seats
+                            </h6>
+
+                            <h2>
+                                {{ ticket.seats }}
+                            </h2>
+
+                        </div>
+
+                        <div class="ticket-item">
+
+                            <h6>
+                                Ticket Price
+                            </h6>
+
+                            <h2>
+                                ₹{{ ticket.price }}
+                            </h2>
+
+                        </div>
+
+                        <div class="ticket-item">
+
+                            <span class="badge bg-success fs-6">
+                                Available
+                            </span>
+
+                        </div>
+
+                        <hr>
+
+                        <form method="POST"
+                              action="{{ url_for('book_ticket',
+                              airport_code=airport.code,
+                              flight_no=flight_no) }}">
+
+                            <input type="hidden"
+                                   name="ticket_class"
+                                   value="{{ ticket.class }}">
+
+                            <input type="hidden"
+                                   name="price"
+                                   value="{{ ticket.price }}">
+
+                            <div class="mb-3">
+
+                                <label class="form-label">
+                                    Number of Tickets
+                                </label>
+
+                                <input type="number"
+                                       name="quantity"
+                                       min="1"
+                                       max="{{ ticket.seats }}"
+                                       value="1"
+                                       class="form-control"
+                                       required>
+
+                            </div>
+
+                            <button type="submit"
+                                    class="btn btn-airport w-100">
+
+                                <i class="bi bi-check-circle-fill"></i>
+                                Book Now
+
+                            </button>
+
+                        </form>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            {% endfor %}
+
+        </div>
+
+        <div class="text-center mt-5">
+
+            <a href="{{ url_for('departures',
+                                airport_code=airport.code) }}"
+               class="btn btn-airport">
+
+                <i class="bi bi-arrow-left-circle"></i>
+                Back to Departures
+
+            </a>
+
+        </div>
+
+    </div>
+
+</section>
+
+{% endblock %}

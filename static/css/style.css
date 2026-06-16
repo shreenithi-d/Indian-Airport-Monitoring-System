@@ -1,0 +1,472 @@
+/* =========================
+   GOOGLE FONT
+========================= */
+
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap');
+
+/* =========================
+   GLOBAL
+========================= */
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:'Poppins',sans-serif;
+}
+
+html{
+    scroll-behavior:smooth;
+}
+
+body{
+    min-height:100vh;
+    background:linear-gradient(
+        135deg,
+        #0f172a,
+        #172554,
+        #0c4a6e
+    );
+    color:#ffffff;
+    overflow-x:hidden;
+}
+
+/* =========================
+   SCROLLBAR
+========================= */
+
+::-webkit-scrollbar{
+    width:10px;
+}
+
+::-webkit-scrollbar-track{
+    background:#0f172a;
+}
+
+::-webkit-scrollbar-thumb{
+    background:#0ea5e9;
+    border-radius:20px;
+}
+
+/* =========================
+   NAVBAR
+========================= */
+
+.custom-navbar{
+    background:rgba(15,23,42,0.9);
+    backdrop-filter:blur(15px);
+    border-bottom:1px solid rgba(255,255,255,0.1);
+    position:sticky;
+    top:0;
+    z-index:999;
+}
+
+.navbar-brand{
+    font-size:1.2rem;
+    letter-spacing:0.5px;
+}
+
+/* =========================
+   AUTH PAGES
+========================= */
+.auth-icon{
+    font-size: 5rem;
+    color: white;
+}
+.auth-section{
+    min-height:100vh;
+    background:
+    linear-gradient(
+        135deg,
+        rgba(13,110,253,0.9),
+        rgba(0,198,255,0.6)
+    );
+}
+
+.auth-card{
+    padding:40px;
+}
+
+.glass-card{
+    background:rgba(255,255,255,0.12);
+    backdrop-filter:blur(18px);
+    border:1px solid rgba(255,255,255,0.15);
+    border-radius:25px;
+    box-shadow:
+    0 8px 32px rgba(0,0,0,0.25);
+}
+
+.auth-icon{
+    font-size:4rem;
+    color:white;
+}
+
+.custom-input{
+    height:55px;
+    border:none;
+    border-radius:15px;
+    background:rgba(255,255,255,0.15);
+    color:white;
+}
+
+.custom-input::placeholder{
+    color:rgba(255,255,255,0.7);
+}
+
+.custom-input:focus{
+    background:rgba(255,255,255,0.2);
+    color:white;
+    box-shadow:none;
+}
+
+/* =========================
+   BUTTONS
+========================= */
+
+.btn-airport{
+    background:linear-gradient(
+        135deg,
+        #0ea5e9,
+        #2563eb
+    );
+    color:white;
+    border:none;
+    border-radius:12px;
+    padding:12px 25px;
+    transition:0.4s;
+    font-weight:600;
+}
+
+.btn-airport:hover{
+    color:white;
+    transform:translateY(-3px);
+    box-shadow:
+    0 10px 20px rgba(14,165,233,0.4);
+}
+
+/* =========================
+   DASHBOARD
+========================= */
+
+.dashboard-section{
+    padding:30px;
+}
+
+.dashboard-card{
+    background:rgba(255,255,255,0.12);
+    backdrop-filter:blur(15px);
+    border-radius:20px;
+    padding:25px;
+    text-align:center;
+    transition:0.4s;
+    border:1px solid rgba(255,255,255,0.1);
+}
+
+.dashboard-card:hover{
+    transform:translateY(-8px);
+}
+
+.dashboard-card h3{
+    font-size:2.5rem;
+    font-weight:700;
+}
+
+.dashboard-card p{
+    margin-top:10px;
+    color:#dbeafe;
+}
+
+/* =========================
+   MAP PAGE
+========================= */
+
+.map-header h1{
+    font-weight:800;
+}
+
+.map-header p{
+    color:#cbd5e1;
+}
+
+.map-container{
+    border-radius:25px;
+    overflow:hidden;
+    box-shadow:
+    0 10px 35px rgba(0,0,0,0.4);
+}
+
+#map{
+    height:75vh;
+    width:100%;
+}
+
+/* =========================
+   AIRPORT DETAILS
+========================= */
+
+.airport-hero{
+    position:relative;
+    overflow:hidden;
+    border-radius:25px;
+}
+
+.airport-banner{
+    width:100%;
+    height:450px;
+    object-fit:cover;
+}
+
+.airport-overlay{
+    position:absolute;
+    bottom:0;
+    left:0;
+    width:100%;
+    padding:40px;
+    background:
+    linear-gradient(
+        transparent,
+        rgba(0,0,0,0.9)
+    );
+}
+
+.airport-overlay h1{
+    font-size:2.5rem;
+    font-weight:700;
+}
+
+.info-card{
+    background:rgba(255,255,255,0.12);
+    backdrop-filter:blur(15px);
+    border-radius:20px;
+    padding:25px;
+    text-align:center;
+    transition:0.3s;
+}
+
+.info-card:hover{
+    transform:translateY(-5px);
+}
+
+.info-card h5{
+    color:#cbd5e1;
+}
+
+.module-card{
+    height:100%;
+    background:rgba(255,255,255,0.12);
+    backdrop-filter:blur(15px);
+    border-radius:20px;
+    padding:30px;
+    text-align:center;
+    transition:0.4s;
+}
+
+.module-card:hover{
+    transform:translateY(-8px);
+}
+
+.module-card i{
+    font-size:3rem;
+    color:#38bdf8;
+}
+
+.module-card h4{
+    margin-top:15px;
+    margin-bottom:15px;
+}
+
+/* =========================
+   TABLE PAGES
+========================= */
+
+.page-header h1{
+    font-weight:700;
+}
+
+.page-header p{
+    color:#cbd5e1;
+}
+
+.table{
+    color:white;
+}
+
+.table thead{
+    background:rgba(255,255,255,0.1);
+}
+
+.table th{
+    color:white;
+    border:none;
+}
+
+.table td{
+    border-color:rgba(255,255,255,0.08);
+}
+
+.table tbody tr{
+    transition:0.3s;
+}
+
+.table tbody tr:hover{
+    background:rgba(255,255,255,0.05);
+}
+
+/* =========================
+   CURRENT FLIGHTS
+========================= */
+
+.flight-card{
+    background:rgba(255,255,255,0.12);
+    backdrop-filter:blur(15px);
+    border-radius:20px;
+    padding:25px;
+    height:100%;
+    transition:0.4s;
+}
+
+.flight-card:hover{
+    transform:translateY(-8px);
+}
+
+.flight-top{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+}
+
+/* =========================
+   TICKET PAGE
+========================= */
+
+.ticket-card{
+    background:rgba(255,255,255,0.12);
+    backdrop-filter:blur(15px);
+    border-radius:25px;
+    overflow:hidden;
+    transition:0.4s;
+}
+
+.ticket-card:hover{
+    transform:translateY(-10px);
+}
+
+.ticket-header{
+    background:
+    linear-gradient(
+        135deg,
+        #0284c7,
+        #2563eb
+    );
+    padding:20px;
+    text-align:center;
+}
+
+.ticket-body{
+    padding:30px;
+    text-align:center;
+}
+
+.ticket-item{
+    margin-bottom:25px;
+}
+
+.ticket-item h2{
+    font-weight:700;
+}
+
+/* =========================
+   LEAFLET POPUP
+========================= */
+
+.leaflet-popup-content-wrapper{
+    border-radius:20px;
+}
+
+.popup-card{
+    width:280px;
+}
+
+.popup-card img{
+    width:100%;
+    height:150px;
+    object-fit:cover;
+    border-radius:12px;
+}
+
+.popup-card h5{
+    margin-top:10px;
+    font-weight:700;
+}
+
+.popup-card p{
+    margin-bottom:10px;
+}
+
+/* =========================
+   FOOTER SPACE
+========================= */
+
+.page-section{
+    min-height:100vh;
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
+
+@media(max-width:992px){
+
+    .airport-banner{
+        height:350px;
+    }
+
+    .airport-overlay h1{
+        font-size:2rem;
+    }
+
+}
+
+@media(max-width:768px){
+
+    .auth-card{
+        padding:25px;
+    }
+
+    .dashboard-section{
+        padding:15px;
+    }
+
+    #map{
+        height:65vh;
+    }
+
+    .airport-banner{
+        height:280px;
+    }
+
+    .airport-overlay{
+        padding:20px;
+    }
+
+    .airport-overlay h1{
+        font-size:1.5rem;
+    }
+
+}
+
+@media(max-width:576px){
+
+    .dashboard-card h3{
+        font-size:2rem;
+    }
+
+    .airport-banner{
+        height:220px;
+    }
+
+    .custom-input{
+        height:50px;
+    }
+
+}

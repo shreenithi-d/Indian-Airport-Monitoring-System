@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+
+{% block title %}
+Current Flights | {{ airport.name }}
+{% endblock %}
+
+{% block content %}
+
+<section class="page-section">
+
+    <div class="container py-5">
+
+        <div class="page-header text-center mb-4">
+
+            <h1>
+                <i class="bi bi-broadcast"></i>
+                Current Flights
+            </h1>
+
+            <p>
+                {{ airport.name }}
+            </p>
+
+        </div>
+
+        <div class="row g-4">
+
+            {% for flight in flights %}
+
+            <div class="col-lg-4 col-md-6">
+
+                <div class="flight-card">
+
+                    <div class="flight-top">
+
+                        <h4>
+                            {{ flight.flight_no }}
+                        </h4>
+
+                        <span class="badge bg-success">
+                            Active
+                        </span>
+
+                    </div>
+
+                    <hr>
+
+                    <p>
+                        <strong>Airline:</strong>
+                        {{ flight.airline }}
+                    </p>
+
+                    <p>
+                        <strong>Source:</strong>
+                        {{ flight.source }}
+                    </p>
+
+                    <p>
+                        <strong>Destination:</strong>
+                        {{ flight.destination }}
+                    </p>
+
+                    <p>
+                        <strong>Departure:</strong>
+                        {{ flight.departure_time }}
+                    </p>
+
+                    <p>
+                        <strong>Gate:</strong>
+                        {{ flight.gate }}
+                    </p>
+
+                </div>
+
+            </div>
+
+            {% endfor %}
+
+        </div>
+
+    </div>
+
+</section>
+
+{% endblock %}

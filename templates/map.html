@@ -1,0 +1,100 @@
+{% extends 'base.html' %}
+
+{% block title %}
+Airport Map | Indian Airport Monitoring System
+{% endblock %}
+
+{% block extra_css %}
+
+<link rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+
+{% endblock %}
+
+{% block content %}
+
+<section class="dashboard-section">
+
+    <div class="container-fluid">
+
+        <!-- Dashboard Cards -->
+
+        <div class="row g-4 mb-4">
+
+            <div class="col-lg-4 col-md-4">
+
+                <div class="dashboard-card">
+
+                    <h3>{{ airports|length }}</h3>
+
+                    <p>Total Airports</p>
+
+                </div>
+
+            </div>
+
+            <div class="col-lg-4 col-md-4">
+
+                <div class="dashboard-card">
+
+                    <h3>300+</h3>
+
+                    <p>Active Flights</p>
+
+                </div>
+
+            </div>
+
+            <div class="col-lg-4 col-md-4">
+
+                <div class="dashboard-card">
+
+                    <h3>24x7</h3>
+
+                    <p>Airport Monitoring</p>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- Header -->
+
+        <div class="map-header text-center mb-4">
+
+            <h1>
+                Indian Airport Monitoring System
+            </h1>
+
+            <p>
+                Interactive Satellite View of Major Indian Airports
+            </p>
+
+        </div>
+
+        <!-- Map -->
+
+        <div class="map-container">
+
+            <div id="map"></div>
+
+        </div>
+
+    </div>
+
+</section>
+
+{% endblock %}
+
+{% block extra_js %}
+
+<script id="airport-data" type="application/json">
+{{ airports | tojson }}
+</script>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script src="{{ url_for('static', filename='js/map.js') }}"></script>
+
+{% endblock %}

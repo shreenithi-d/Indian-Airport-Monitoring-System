@@ -1,0 +1,188 @@
+{% extends 'base.html' %}
+
+{% block title %}
+{{ airport.name }} | Airport Details
+{% endblock %}
+
+{% block content %}
+
+<section class="airport-details-section">
+
+    <div class="container py-5">
+
+        <div class="airport-hero">
+
+            <img src="{{ airport.image }}"
+                 alt="{{ airport.name }}"
+                 class="airport-banner">
+
+            <div class="airport-overlay">
+
+                <h1>{{ airport.name }}</h1>
+
+                <p>
+                    {{ airport.city }} | {{ airport.code }}
+                </p>
+
+            </div>
+
+        </div>
+
+        <div class="row mt-4 g-4">
+
+            <div class="col-lg-3 col-md-6">
+                <div class="info-card">
+                    <h5>Airport Code</h5>
+                    <h3>{{ airport.code }}</h3>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-md-6">
+                <div class="info-card">
+                    <h5>Runways</h5>
+                    <h3>{{ airport.runways }}</h3>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-md-6">
+                <div class="info-card">
+                    <h5>Terminals</h5>
+                    <h3>{{ airport.terminals }}</h3>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-md-6">
+                <div class="info-card">
+                    <h5>Passengers</h5>
+                    <h3>{{ airport.passengers }}</h3>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="glass-card mt-4 p-4">
+
+            <h3 class="mb-3">
+                About Airport
+            </h3>
+
+            <p>
+                {{ airport.description }}
+            </p>
+
+        </div>
+
+        <div class="row mt-5 g-4">
+
+            <div class="col-lg-4 col-md-6">
+                <div class="module-card">
+
+                    <i class="bi bi-box-arrow-in-down"></i>
+
+                    <h4>Arrivals</h4>
+
+                    <p>
+                        View all incoming flights.
+                    </p>
+
+                    <a href="{{ url_for('arrivals', airport_code=airport.code) }}"
+                       class="btn btn-airport">
+
+                        Open
+
+                    </a>
+
+                </div>
+            </div>
+
+            <div class="col-lg-4 col-md-6">
+                <div class="module-card">
+
+                    <i class="bi bi-send-fill"></i>
+
+                    <h4>Departures</h4>
+
+                    <p>
+                        View outgoing flights.
+                    </p>
+
+                    <a href="{{ url_for('departures', airport_code=airport.code) }}"
+                       class="btn btn-airport">
+
+                        Open
+
+                    </a>
+
+                </div>
+            </div>
+
+            <div class="col-lg-4 col-md-6">
+                <div class="module-card">
+
+                    <i class="bi bi-airplane"></i>
+
+                    <h4>Flight Details</h4>
+
+                    <p>
+                        Complete flight information.
+                    </p>
+
+                    <a href="{{ url_for('flight_details', airport_code=airport.code) }}"
+                       class="btn btn-airport">
+
+                        Open
+
+                    </a>
+
+                </div>
+            </div>
+
+            <div class="col-lg-6 col-md-6">
+                <div class="module-card">
+
+                    <i class="bi bi-broadcast"></i>
+
+                    <h4>Current Flights</h4>
+
+                    <p>
+                        Flights currently operating.
+                    </p>
+
+                    <a href="{{ url_for('current_flights', airport_code=airport.code) }}"
+                       class="btn btn-airport">
+
+                        Open
+
+                    </a>
+
+                </div>
+            </div>
+
+            <div class="col-lg-6 col-md-6">
+                <div class="module-card">
+
+                    <i class="bi bi-exclamation-triangle-fill"></i>
+
+                    <h4>Delayed Flights</h4>
+
+                    <p>
+                        Delayed flight information.
+                    </p>
+
+                    <a href="{{ url_for('delayed_flights', airport_code=airport.code) }}"
+                       class="btn btn-airport">
+
+                        Open
+
+                    </a>
+
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+{% endblock %}

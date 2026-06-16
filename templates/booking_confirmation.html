@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+
+{% block title %}
+Booking Confirmation
+{% endblock %}
+
+{% block content %}
+
+<div class="container py-5">
+
+    <div class="glass-card p-5 text-center">
+
+        <i class="bi bi-check-circle-fill
+                  text-success
+                  display-1"></i>
+
+        <h2 class="mt-3">
+            Ticket Booked Successfully
+        </h2>
+
+        <hr>
+
+        <p>
+            <strong>Flight:</strong>
+            {{ flight_no }}
+        </p>
+
+        <p>
+            <strong>Class:</strong>
+            {{ ticket_class }}
+        </p>
+
+        <p>
+            <strong>Tickets:</strong>
+            {{ quantity }}
+        </p>
+
+        <p>
+            <strong>Total Amount:</strong>
+            ₹{{ total_price }}
+        </p>
+
+        <p>
+            <strong>Status:</strong>
+            Booked
+        </p>
+
+        <p>
+            <strong>Payment:</strong>
+            Pending
+        </p>
+
+        <a href="{{ url_for('map_page') }}"
+           class="btn btn-airport">
+
+            Back To Dashboard
+
+        </a>
+
+    </div>
+
+</div>
+
+{% endblock %}
