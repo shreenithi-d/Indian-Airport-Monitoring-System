@@ -34,7 +34,7 @@ AIRPORTS = {
         "runways": 2,
         "terminals": 2,
         "passengers": "50 Million+",
-        "image": "https://images.unsplash.com/photo-1494412574643-ff11b0a5c1c3",
+        "image": "https://akm-img-a-in.tosshub.com/businesstoday/images/story/201401/mumbai-airport660_011114104706.gif?size=948:533",
         "description": "Mumbai Airport is a major aviation hub handling significant domestic and international traffic."
     },
 
@@ -73,7 +73,7 @@ AIRPORTS = {
         "runways": 2,
         "terminals": 1,
         "passengers": "23 Million+",
-        "image": "https://images.unsplash.com/photo-1502920917128-1aa500764cbd",
+        "image": "https://upload.wikimedia.org/wikipedia/commons/e/e5/External_view_of_Netaji_Subhas_Chandra_Bose_International_Airport.jpg",
         "description": "Kolkata Airport serves Eastern India and is a major international aviation hub."
     },
 
@@ -112,7 +112,7 @@ AIRPORTS = {
         "runways": 1,
         "terminals": 1,
         "passengers": "9 Million+",
-        "image": "https://images.unsplash.com/photo-1494412574643-ff11b0a5c1c3",
+        "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQRUg0gxtdIzjpFNRC2cAoB8vVxYTIwYOniyjDrwVRA6OfSHzzbqgi4VLU&s=10",
         "description": "Pune Airport is an important airport serving Maharashtra's growing IT sector."
     },
 
@@ -164,7 +164,7 @@ AIRPORTS = {
         "runways": 1,
         "terminals": 2,
         "passengers": "4 Million+",
-        "image": "https://images.unsplash.com/photo-1542296332-2e4473faf563",
+        "image": "https://images.moneycontrol.com/static-mcnews/2025/08/20250830040546_Lucknow-airport.jpg?impolicy=website&width=1600&height=900",
         "description": "Bhubaneswar Airport is the primary airport serving Odisha."
     },
 
