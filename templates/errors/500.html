@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+
+{% block title %}500 System Error - {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="container py-5 text-center">
+  <div class="stat-icon-wrapper bg-danger bg-opacity-10 text-danger mx-auto mb-3" style="width: 80px; height: 80px;">
+    <i class="bi bi-exclamation-octagon fs-1"></i>
+  </div>
+  <h2 class="fw-bold text-navy mb-2">500 - Operational System Error</h2>
+  <p class="text-muted small max-w-500 mx-auto mb-4">
+    An unexpected error occurred during database transaction processing. The operation has been safely rolled back.
+  </p>
+  <div class="d-flex justify-content-center gap-2">
+    <a href="{{ url_for('main.landing') }}" class="btn btn-aviation-primary btn-sm">
+      <i class="bi bi-house me-1"></i>Return to Home
+    </a>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,95 @@
+/* Responsive Design Tweaks */
+@media (max-width: 991.98px) {
+  .dashboard-wrapper {
+    flex-direction: column;
+  }
+
+  .dashboard-sidebar {
+    width: 100%;
+    border-right: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .sidebar-menu {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 0.75rem;
+  }
+
+  .sidebar-section-title {
+    display: none;
+  }
+
+  .sidebar-link {
+    padding: 0.45rem 0.75rem;
+    font-size: 0.85rem;
+  }
+
+  .map-container-wrapper {
+    height: 520px;
+  }
+
+  .map-floating-panel {
+    position: relative;
+    top: auto;
+    left: auto;
+    width: 100%;
+    margin-bottom: 1rem;
+    box-shadow: none;
+  }
+
+  .map-legend-panel {
+    position: relative;
+    bottom: auto;
+    right: auto;
+    margin-top: 0.5rem;
+  }
+
+  .hero-search-card {
+    margin-top: 1rem;
+  }
+
+  .sticky-seat-summary {
+    position: static;
+    margin-top: 1.5rem;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .hero-aviation {
+    padding: 2.5rem 0 1.5rem 0;
+  }
+
+  .stat-box {
+    padding: 0.85rem;
+  }
+
+  .stat-val {
+    font-size: 1.4rem;
+  }
+
+  .aircraft-fuselage {
+    padding: 1rem 0.5rem;
+  }
+
+  .aircraft-seat-btn {
+    width: 32px;
+    height: 38px;
+    font-size: 0.68rem;
+  }
+
+  .seat-letters-header {
+    grid-template-columns: 32px 32px 32px 20px 32px 32px 32px;
+    gap: 4px;
+  }
+
+  .seat-row-container {
+    gap: 4px;
+  }
+
+  .wing-indicator-left,
+  .wing-indicator-right {
+    display: none;
+  }
+}

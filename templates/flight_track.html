@@ -1,0 +1,110 @@
+{% extends 'base.html' %}
+
+{% block title %}Track Flight Schedule &amp; Status - {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <div class="aviation-card p-4 mb-4">
+    <div class="d-flex align-items-center gap-2 mb-3">
+      <i class="bi bi-radar text-primary fs-3"></i>
+      <h4 class="fw-bold text-navy m-0">Flight Schedule &amp; Status Tracker</h4>
+    </div>
+
+    <form method="GET" action="{{ url_for('flights.track_search') }}">
+      <div class="row g-2 align-items-end">
+        <div class="col-md-6">
+          <label class="form-label small fw-bold text-muted">Flight Number</label>
+          <div class="input-group">
+            <span class="input-group-text bg-light"><i class="bi bi-search"></i></span>
+            <input type="text" name="flight_number" class="form-control" placeholder="e.g. AI-101, 6E-204, UK-812" value="{{ flight_number_query }}">
+          </div>
+        </div>
+
+        <div class="col-md-4">
+          <label class="form-label small fw-bold text-muted">Operational Status</label>
+          <select name="status" class="form-select">
+            <option value="All" {% if status_filter == 'All' %}selected{% endif %}>All Active Statuses</option>
+            <option value="Scheduled" {% if status_filter == 'Scheduled' %}selected{% endif %}>Scheduled</option>
+            <option value="Boarding" {% if status_filter == 'Boarding' %}selected{% endif %}>Boarding</option>
+            <option value="Departed" {% if status_filter == 'Departed' %}selected{% endif %}>Departed</option>
+            <option value="In flight" {% if status_filter == 'In flight' %}selected{% endif %}>In Flight</option>
+            <option value="Arrived" {% if status_filter == 'Arrived' %}selected{% endif %}>Arrived</option>
+            <option value="Delayed" {% if status_filter == 'Delayed' %}selected{% endif %}>Delayed</option>
+          </select>
+        </div>
+
+        <div class="col-md-2">
+          <button type="submit" class="btn btn-aviation-primary w-100">
+            <i class="bi bi-radar me-1"></i>Track Flight
+          </button>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <!-- Flight Status Board -->
+  <div class="aviation-card overflow-hidden">
+    <div class="aviation-card-header bg-white d-flex justify-content-between align-items-center">
+      <span><i class="bi bi-display me-2"></i>Flight Status Monitoring Board</span>
+      <span class="badge bg-secondary">{{ flights|length }} Monitored Flights</span>
+    </div>
+
+    {% if flights %}
+      <div class="table-responsive">
+        <table class="table aviation-table mb-0">
+          <thead>
+            <tr>
+              <th>Flight</th>
+              <th>Airline</th>
+              <th>Origin</th>
+              <th>Destination</th>
+              <th>Scheduled Time</th>
+              <th>Terminal / Gate</th>
+              <th>Status</th>
+              <th class="text-end">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for f in flights %}
+              <tr>
+                <td><strong class="font-monospace fs-6 text-navy">{{ f.flight_number }}</strong></td>
+                <td>{{ f.airline.name }}</td>
+                <td>
+                  <strong>{{ f.origin_airport.city }}</strong>
+                  <span class="badge bg-light text-dark border ms-1">{{ f.origin_airport.iata_code or f.origin_airport.icao_code }}</span>
+                </td>
+                <td>
+                  <strong>{{ f.destination_airport.city }}</strong>
+                  <span class="badge bg-light text-dark border ms-1">{{ f.destination_airport.iata_code or f.destination_airport.icao_code }}</span>
+                </td>
+                <td>{{ f.scheduled_departure|datetime }}</td>
+                <td>{{ f.terminal or 'T1' }} / {{ f.gate or 'G1' }}</td>
+                <td>
+                  <span class="badge 
+                    {% if f.status == 'Delayed' %}bg-warning text-dark
+                    {% elif f.status == 'Cancelled' %}bg-danger
+                    {% elif f.status in ['Boarding', 'In flight', 'Departed'] %}bg-primary
+                    {% elif f.status == 'Arrived' %}bg-success
+                    {% else %}bg-secondary{% endif %}">
+                    {{ f.status }}
+                  </span>
+                </td>
+                <td class="text-end">
+                  <a href="{{ url_for('flights.track_flight', flight_id=f.id) }}" class="btn btn-sm btn-aviation-primary">
+                    <i class="bi bi-radar me-1"></i>Track
+                  </a>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="p-5 text-center text-muted">
+        <i class="bi bi-airplane fs-1 d-block mb-2"></i>
+        No flights match your tracking search. Try searching for "AI-101" or "6E-204".
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

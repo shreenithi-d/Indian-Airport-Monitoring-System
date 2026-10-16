@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+
+{% block title %}404 Page Not Found - {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="container py-5 text-center">
+  <div class="stat-icon-wrapper bg-warning bg-opacity-10 text-warning mx-auto mb-3" style="width: 80px; height: 80px;">
+    <i class="bi bi-airplane-engines fs-1"></i>
+  </div>
+  <h2 class="fw-bold text-navy mb-2">404 - Airport or Flight Not Found</h2>
+  <p class="text-muted small max-w-500 mx-auto mb-4">
+    The requested flight schedule, airport profile, or operational page does not exist in our flight database.
+  </p>
+  <div class="d-flex justify-content-center gap-2">
+    <a href="{{ url_for('main.landing') }}" class="btn btn-aviation-primary btn-sm">
+      <i class="bi bi-house me-1"></i>Return to Home
+    </a>
+    <a href="{{ url_for('airports.map_view') }}" class="btn btn-aviation-cyan btn-sm">
+      <i class="bi bi-map me-1"></i>Explore Airport Map
+    </a>
+  </div>
+</div>
+{% endblock %}

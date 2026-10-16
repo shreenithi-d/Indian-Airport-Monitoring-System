@@ -1,0 +1,111 @@
+{% extends 'base.html' %}
+
+{% block title %}Add Flight Schedule - Admin Console{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <div class="row justify-content-center">
+    <div class="col-lg-8">
+      <div class="aviation-card p-4">
+        <div class="d-flex justify-content-between align-items-center border-bottom pb-3 mb-4">
+          <h4 class="fw-bold text-navy m-0">Create Flight Schedule</h4>
+          <a href="{{ url_for('admin.flights') }}" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-arrow-left me-1"></i>Back to Flights
+          </a>
+        </div>
+
+        <form method="POST">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+          <div class="row g-3 mb-3">
+            <div class="col-md-4">
+              <label class="form-label small fw-bold text-muted">Flight Number <span class="text-danger">*</span></label>
+              <input type="text" name="flight_number" class="form-control font-monospace" placeholder="e.g. AI-202" required>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small fw-bold text-muted">Airline Carrier <span class="text-danger">*</span></label>
+              <select name="airline_id" class="form-select" required>
+                {% for al in airlines %}
+                  <option value="{{ al.id }}">{{ al.name }} ({{ al.code }})</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small fw-bold text-muted">Assigned Aircraft <span class="text-danger">*</span></label>
+              <select name="aircraft_id" class="form-select" required>
+                {% for ac in aircraft_list %}
+                  <option value="{{ ac.id }}">{{ ac.model }} ({{ ac.registration }})</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+
+          <div class="row g-3 mb-3">
+            <div class="col-md-6">
+              <label class="form-label small fw-bold text-muted">Origin Airport <span class="text-danger">*</span></label>
+              <select name="origin_airport_id" class="form-select" required>
+                {% for apt in airports %}
+                  <option value="{{ apt.id }}">{{ apt.city }} - {{ apt.name }} ({{ apt.iata_code or apt.icao_code }})</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-bold text-muted">Destination Airport <span class="text-danger">*</span></label>
+              <select name="destination_airport_id" class="form-select" required>
+                {% for apt in airports %}
+                  <option value="{{ apt.id }}">{{ apt.city }} - {{ apt.name }} ({{ apt.iata_code or apt.icao_code }})</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+
+          <div class="row g-3 mb-3">
+            <div class="col-md-6">
+              <label class="form-label small fw-bold text-muted">Scheduled Departure <span class="text-danger">*</span></label>
+              <input type="datetime-local" name="scheduled_departure" class="form-control" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-bold text-muted">Scheduled Arrival <span class="text-danger">*</span></label>
+              <input type="datetime-local" name="scheduled_arrival" class="form-control" required>
+            </div>
+          </div>
+
+          <div class="row g-3 mb-3">
+            <div class="col-md-4">
+              <label class="form-label small fw-bold text-muted">Base Fare (INR) <span class="text-danger">*</span></label>
+              <input type="number" step="50" name="base_fare" class="form-control" value="4500.0" required>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small fw-bold text-muted">Terminal</label>
+              <input type="text" name="terminal" class="form-control" value="T1">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small fw-bold text-muted">Gate</label>
+              <input type="text" name="gate" class="form-control" value="G4">
+            </div>
+          </div>
+
+          <div class="row g-3 mb-4">
+            <div class="col-md-6">
+              <label class="form-label small fw-bold text-muted">Baggage Belt</label>
+              <input type="text" name="baggage_belt" class="form-control" value="B2">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-bold text-muted">Initial Operational Status</label>
+              <select name="status" class="form-select">
+                <option value="Scheduled" selected>Scheduled</option>
+                <option value="Check-in open">Check-in open</option>
+                <option value="Boarding">Boarding</option>
+              </select>
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-aviation-primary px-4 py-2">
+            <i class="bi bi-calendar-plus me-1"></i>Publish Flight Schedule
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

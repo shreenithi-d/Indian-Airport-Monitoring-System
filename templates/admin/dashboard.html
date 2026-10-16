@@ -1,0 +1,221 @@
+{% extends 'base.html' %}
+
+{% block title %}Admin Operations Console - {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper">
+  <!-- Admin Sidebar -->
+  <aside class="dashboard-sidebar">
+    <div class="sidebar-header">
+      <span class="fw-bold text-white small text-uppercase letter-spacing-1">
+        <i class="bi bi-shield-lock-fill text-warning me-2"></i>Admin Console
+      </span>
+    </div>
+    <ul class="sidebar-menu">
+      <li class="sidebar-item">
+        <a href="{{ url_for('admin.dashboard') }}" class="sidebar-link active">
+          <i class="bi bi-speedometer2"></i>Overview
+        </a>
+      </li>
+      <li class="sidebar-section-title">Aviation Management</li>
+      <li class="sidebar-item">
+        <a href="{{ url_for('admin.airports') }}" class="sidebar-link">
+          <i class="bi bi-building"></i>Airports
+        </a>
+      </li>
+      <li class="sidebar-item">
+        <a href="{{ url_for('admin.flights') }}" class="sidebar-link">
+          <i class="bi bi-airplane"></i>Flights &amp; Schedules
+        </a>
+      </li>
+      <li class="sidebar-item">
+        <a href="{{ url_for('admin.fleet') }}" class="sidebar-link">
+          <i class="bi bi-grid-3x3"></i>Fleet &amp; Seats
+        </a>
+      </li>
+      <li class="sidebar-section-title">Passenger Operations</li>
+      <li class="sidebar-item">
+        <a href="{{ url_for('admin.bookings') }}" class="sidebar-link">
+          <i class="bi bi-ticket-perforated"></i>Bookings
+        </a>
+      </li>
+      <li class="sidebar-item">
+        <a href="{{ url_for('admin.users') }}" class="sidebar-link">
+          <i class="bi bi-people"></i>Passengers
+        </a>
+      </li>
+      <li class="sidebar-section-title">Monitoring &amp; Audit</li>
+      <li class="sidebar-item">
+        <a href="{{ url_for('admin.analytics') }}" class="sidebar-link">
+          <i class="bi bi-bar-chart-line"></i>Analytics
+        </a>
+      </li>
+      <li class="sidebar-item">
+        <a href="{{ url_for('admin.audit_logs') }}" class="sidebar-link">
+          <i class="bi bi-journal-text"></i>Audit Logs
+        </a>
+      </li>
+      <li class="sidebar-item">
+        <a href="{{ url_for('admin.settings') }}" class="sidebar-link">
+          <i class="bi bi-gear"></i>Settings
+        </a>
+      </li>
+    </ul>
+  </aside>
+
+  <!-- Main Admin Dashboard View -->
+  <div class="dashboard-main">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <div>
+        <h4 class="fw-bold text-navy m-0">Operations Command Center</h4>
+        <p class="text-muted small m-0">Live operational monitoring of Indian airspace nodes and passenger bookings</p>
+      </div>
+      <div class="d-flex gap-2">
+        <a href="{{ url_for('admin.add_flight') }}" class="btn btn-aviation-primary btn-sm">
+          <i class="bi bi-plus-circle me-1"></i>Add Flight Schedule
+        </a>
+        <a href="{{ url_for('admin.add_airport') }}" class="btn btn-outline-secondary btn-sm">
+          <i class="bi bi-plus-lg me-1"></i>Add Airport
+        </a>
+      </div>
+    </div>
+
+    <!-- Metric Cards Grid -->
+    <div class="row g-3 mb-4">
+      <div class="col-6 col-md-4 col-xl-2">
+        <div class="metric-card metric-card-accent-blue">
+          <span class="metric-title">Total Airports</span>
+          <h3 class="metric-val">{{ stats.total_airports }}</h3>
+        </div>
+      </div>
+      <div class="col-6 col-md-4 col-xl-2">
+        <div class="metric-card metric-card-accent-cyan">
+          <span class="metric-title">Total Flights</span>
+          <h3 class="metric-val">{{ stats.total_flights }}</h3>
+        </div>
+      </div>
+      <div class="col-6 col-md-4 col-xl-2">
+        <div class="metric-card metric-card-accent-green">
+          <span class="metric-title">Active Bookings</span>
+          <h3 class="metric-val">{{ stats.active_bookings }}</h3>
+        </div>
+      </div>
+      <div class="col-6 col-md-4 col-xl-2">
+        <div class="metric-card metric-card-accent-amber">
+          <span class="metric-title">Cancellations</span>
+          <h3 class="metric-val">{{ stats.cancelled_bookings }}</h3>
+        </div>
+      </div>
+      <div class="col-6 col-md-4 col-xl-2">
+        <div class="metric-card">
+          <span class="metric-title">Passengers</span>
+          <h3 class="metric-val">{{ stats.total_passengers }}</h3>
+        </div>
+      </div>
+      <div class="col-6 col-md-4 col-xl-2">
+        <div class="metric-card">
+          <span class="metric-title">Fleet Aircraft</span>
+          <h3 class="metric-val">{{ stats.total_aircraft }}</h3>
+        </div>
+      </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="row g-4 mb-4">
+      <div class="col-lg-6">
+        <div class="aviation-card p-4 h-100">
+          <h6 class="fw-bold text-navy mb-3"><i class="bi bi-pie-chart text-primary me-2"></i>Airport Distribution by Category</h6>
+          <div style="height: 250px;" class="d-flex align-items-center justify-content-center">
+            <canvas id="airportCategoriesChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-6">
+        <div class="aviation-card p-4 h-100">
+          <h6 class="fw-bold text-navy mb-3"><i class="bi bi-bar-chart text-primary me-2"></i>Operational Flight Statuses</h6>
+          <div style="height: 250px;">
+            <canvas id="flightStatusChart"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent Bookings and Audit Logs -->
+    <div class="row g-4">
+      <!-- Recent Bookings -->
+      <div class="col-lg-7">
+        <div class="aviation-card overflow-hidden">
+          <div class="aviation-card-header d-flex justify-content-between align-items-center">
+            <span><i class="bi bi-receipt me-2 text-primary"></i>Recent Booking Transactions</span>
+            <a href="{{ url_for('admin.bookings') }}" class="small text-decoration-none">View All</a>
+          </div>
+          {% if recent_bookings %}
+            <div class="table-responsive">
+              <table class="table aviation-table mb-0">
+                <thead>
+                  <tr>
+                    <th>Reference</th>
+                    <th>Flight</th>
+                    <th>Route</th>
+                    <th>Pax</th>
+                    <th>Amount</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for b in recent_bookings %}
+                    <tr>
+                      <td><strong class="font-monospace text-navy">{{ b.booking_reference }}</strong></td>
+                      <td>{{ b.flight.flight_number }}</td>
+                      <td>{{ b.flight.origin_airport.iata_code or b.flight.origin_airport.city }} &rarr; {{ b.flight.destination_airport.iata_code or b.flight.destination_airport.city }}</td>
+                      <td>{{ b.passenger_count }}</td>
+                      <td>{{ b.total_amount|currency }}</td>
+                      <td>
+                        <span class="badge {% if b.booking_status == 'Confirmed' %}bg-success{% else %}bg-danger{% endif %}">
+                          {{ b.booking_status }}
+                        </span>
+                      </td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          {% else %}
+            <div class="p-4 text-center text-muted small">No recent bookings recorded.</div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Recent Audit Logs -->
+      <div class="col-lg-5">
+        <div class="aviation-card p-3">
+          <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-3">
+            <h6 class="fw-bold text-navy m-0"><i class="bi bi-journal-text me-2 text-primary"></i>Recent System Activity</h6>
+            <a href="{{ url_for('admin.audit_logs') }}" class="small text-decoration-none">Logs</a>
+          </div>
+          {% if recent_logs %}
+            <div class="d-flex flex-column gap-2">
+              {% for log in recent_logs %}
+                <div class="p-2 rounded bg-light border small">
+                  <div class="d-flex justify-content-between">
+                    <strong class="text-navy">{{ log.action }}</strong>
+                    <span class="text-muted" style="font-size: 0.7rem;">{{ log.created_at|datetime }}</span>
+                  </div>
+                  <div class="text-secondary text-truncate" style="font-size: 0.75rem;">{{ log.notes }}</div>
+                </div>
+              {% endfor %}
+            </div>
+          {% else %}
+            <p class="text-muted small">No audit activity logged.</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{{ url_for('static', filename='js/admin.js') }}"></script>
+{% endblock %}

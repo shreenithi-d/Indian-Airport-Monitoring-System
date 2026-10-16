@@ -1,0 +1,158 @@
+{% extends 'base.html' %}
+
+{% block title %}Interactive Indian Airport Map - {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-lg-4 py-3">
+  <!-- Header / Breadcrumbs -->
+  <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-3">
+    <div>
+      <h4 class="fw-bold text-navy m-0">Smart Geographical Airport Map of India</h4>
+      <p class="text-muted small m-0">Real-time geographical visualization across 110+ verified Indian airports and civil enclaves</p>
+    </div>
+    <div class="d-flex gap-2 mt-2 mt-md-0">
+      <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-3 py-2 d-flex align-items-center">
+        <i class="bi bi-geo-alt-fill me-1"></i>Visible Airports: <strong id="visible-airports-count" class="ms-1">{{ airports|length }}</strong>
+      </span>
+      <a href="{{ url_for('airports.airport_list') }}" class="btn btn-sm btn-outline-secondary">
+        <i class="bi bi-table me-1"></i>Table View
+      </a>
+    </div>
+  </div>
+
+  <!-- Fallback Map Error Banner -->
+  <div id="map-error-banner" class="alert alert-warning d-none" role="alert">
+    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+    Map tiles could not be fetched from the tile provider. A fallback list is available below.
+  </div>
+
+  <div class="row g-3">
+    <!-- Main Map Container -->
+    <div class="col-lg-9">
+      <div class="map-container-wrapper">
+        <!-- Floating Filter Controls -->
+        <div class="map-floating-panel">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <h6 class="fw-bold m-0 small text-navy"><i class="bi bi-sliders me-1"></i>Map Filters</h6>
+            <button type="button" class="btn btn-link btn-sm p-0 text-decoration-none text-muted" id="map-reset-btn">Reset</button>
+          </div>
+
+          <div class="mb-2">
+            <div class="input-group input-group-sm">
+              <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+              <input type="text" id="map-search-input" class="form-control" placeholder="Search city, airport or code...">
+            </div>
+          </div>
+
+          <div class="row g-1 mb-2">
+            <div class="col-6">
+              <label class="form-label text-muted" style="font-size: 0.72rem;">State / UT</label>
+              <select id="map-state-filter" class="form-select form-select-sm">
+                <option value="All" selected>All States</option>
+                {% for st in states %}
+                  <option value="{{ st }}">{{ st }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-6">
+              <label class="form-label text-muted" style="font-size: 0.72rem;">Category</label>
+              <select id="map-category-filter" class="form-select form-select-sm">
+                <option value="All" selected>All Categories</option>
+                <option value="International">International</option>
+                <option value="Domestic">Domestic</option>
+                <option value="Customs">Customs</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label class="form-label text-muted" style="font-size: 0.72rem;">Operational Status</label>
+            <select id="map-status-filter" class="form-select form-select-sm">
+              <option value="All" selected>All Statuses</option>
+              <option value="Operational">Operational</option>
+              <option value="Non-Operational">Non-Operational</option>
+              <option value="Under Development">Under Development</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Legend Panel -->
+        <div class="map-legend-panel">
+          <div class="fw-bold mb-1" style="font-size: 0.75rem; text-transform: uppercase;">Airport Categories</div>
+          <div class="legend-item"><span class="legend-dot dot-international"></span><span>International Airport</span></div>
+          <div class="legend-item"><span class="legend-dot dot-domestic"></span><span>Domestic / Regional</span></div>
+          <div class="legend-item"><span class="legend-dot dot-customs"></span><span>Customs / Civil Enclave</span></div>
+          <div class="legend-item"><span class="legend-dot dot-development"></span><span>Under Development</span></div>
+        </div>
+
+        <!-- Leaflet Map Canvas -->
+        <div id="india-airport-map"></div>
+      </div>
+    </div>
+
+    <!-- Side Airport Drawer / Quick Info -->
+    <div class="col-lg-3">
+      <div class="aviation-card h-100 d-flex flex-column" style="max-height: 680px;">
+        <div class="aviation-card-header d-flex justify-content-between align-items-center">
+          <span><i class="bi bi-list-ul me-1"></i>Airport Directory</span>
+          <span class="badge bg-secondary" style="font-size: 0.7rem;">{{ airports|length }} Nodes</span>
+        </div>
+
+        <div class="p-2 border-bottom">
+          <input type="text" id="side-airport-search" class="form-control form-control-sm" placeholder="Quick filter list...">
+        </div>
+
+        <div class="p-2 flex-grow-1 overflow-y-auto" id="side-airports-list">
+          {% for apt in airports %}
+            <div class="p-2 mb-1 rounded bg-light border airport-list-item" 
+                 data-airport-id="{{ apt.id }}" 
+                 data-search-text="{{ apt.city|lower }} {{ apt.name|lower }} {{ apt.iata_code|lower if apt.iata_code else '' }}"
+                 style="cursor: pointer; transition: background 0.15s ease;"
+                 onclick="focusOnAirport({{ apt.id }})">
+              <div class="d-flex justify-content-between align-items-start">
+                <strong class="small text-navy">{{ apt.city }}</strong>
+                <span class="badge bg-dark fw-bold" style="font-size: 0.68rem;">{{ apt.iata_code or apt.icao_code }}</span>
+              </div>
+              <div class="small text-muted text-truncate" style="font-size: 0.75rem;">{{ apt.name }}</div>
+              <div class="d-flex justify-content-between align-items-center mt-1">
+                <span class="badge badge-{{ apt.category.lower() }}" style="font-size: 0.65rem;">{{ apt.category }}</span>
+                <span class="small text-primary" style="font-size: 0.72rem;"><i class="bi bi-geo-alt"></i> Pan Map</span>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{{ url_for('static', filename='js/airport-map.js') }}"></script>
+<script>
+  // Initial airports JSON for Leaflet
+  const initialAirports = {{ airports_json|tojson }};
+  const selectedAirportId = {% if selected_airport %}{{ selected_airport.id }}{% else %}null{% endif %};
+
+  document.addEventListener('DOMContentLoaded', function() {
+    initIndianAirportMap('india-airport-map', initialAirports, selectedAirportId);
+
+    // Side list search
+    const sideSearch = document.getElementById('side-airport-search');
+    const sideItems = document.querySelectorAll('.airport-list-item');
+    if (sideSearch) {
+      sideSearch.addEventListener('input', function() {
+        const val = this.value.toLowerCase().trim();
+        sideItems.forEach(item => {
+          const text = item.getAttribute('data-search-text');
+          if (!val || text.includes(val)) {
+            item.classList.remove('d-none');
+          } else {
+            item.classList.add('d-none');
+          }
+        });
+      });
+    }
+  });
+</script>
+{% endblock %}

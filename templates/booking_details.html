@@ -1,0 +1,168 @@
+{% extends 'base.html' %}
+
+{% block title %}Booking Details - {{ booking.booking_reference }} | {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <!-- Breadcrumb -->
+  <nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb small">
+      <li class="breadcrumb-item"><a href="{{ url_for('main.landing') }}">Home</a></li>
+      <li class="breadcrumb-item"><a href="{{ url_for('bookings.my_bookings') }}">My Bookings</a></li>
+      <li class="breadcrumb-item active" aria-current="page">{{ booking.booking_reference }}</li>
+    </ol>
+  </nav>
+
+  <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4">
+    <div>
+      <div class="d-flex align-items-center gap-2 mb-1">
+        <span class="badge bg-dark font-monospace fs-6">{{ booking.booking_reference }}</span>
+        <span class="badge 
+          {% if booking.booking_status == 'Confirmed' %}bg-success
+          {% elif booking.booking_status == 'Cancelled' %}bg-danger
+          {% else %}bg-secondary{% endif %}">
+          {{ booking.booking_status }}
+        </span>
+      </div>
+      <h3 class="fw-bold text-navy m-0">Journey Itinerary &amp; Invoice</h3>
+    </div>
+
+    <div class="d-flex gap-2 mt-2 mt-md-0">
+      {% if booking.booking_status == 'Confirmed' %}
+        <a href="{{ url_for('bookings.ticket_view', booking_id=booking.id) }}" class="btn btn-aviation-primary btn-sm">
+          <i class="bi bi-qr-code me-1"></i>View Boarding Pass
+        </a>
+        <button type="button" class="btn btn-outline-danger btn-sm" data-bs-toggle="modal" data-bs-target="#cancelModal">
+          <i class="bi bi-x-circle me-1"></i>Cancel Booking
+        </button>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="row g-4">
+    <div class="col-lg-8">
+      <!-- Flight Details -->
+      <div class="aviation-card p-4 mb-4">
+        <h6 class="fw-bold text-navy border-bottom pb-2 mb-3"><i class="bi bi-airplane me-1 text-primary"></i>Flight Details</h6>
+        
+        <div class="row g-3">
+          <div class="col-md-6">
+            <small class="text-muted d-block text-uppercase">Origin Airport</small>
+            <strong class="fs-5 text-navy d-block">{{ booking.flight.origin_airport.city }} ({{ booking.flight.origin_airport.iata_code or booking.flight.origin_airport.icao_code }})</strong>
+            <small class="text-muted">{{ booking.flight.origin_airport.name }}</small>
+            <div class="small mt-1">Scheduled: <strong>{{ booking.flight.scheduled_departure|datetime }}</strong></div>
+          </div>
+
+          <div class="col-md-6">
+            <small class="text-muted d-block text-uppercase">Destination Airport</small>
+            <strong class="fs-5 text-navy d-block">{{ booking.flight.destination_airport.city }} ({{ booking.flight.destination_airport.iata_code or booking.flight.destination_airport.icao_code }})</strong>
+            <small class="text-muted">{{ booking.flight.destination_airport.name }}</small>
+            <div class="small mt-1">Scheduled: <strong>{{ booking.flight.scheduled_arrival|datetime }}</strong></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Passengers Table -->
+      <div class="aviation-card p-4 mb-4">
+        <h6 class="fw-bold text-navy mb-3"><i class="bi bi-people me-1 text-primary"></i>Passenger Seat Assignments</h6>
+        <div class="table-responsive">
+          <table class="table aviation-table mb-0">
+            <thead>
+              <tr>
+                <th>Passenger Name</th>
+                <th>Gender</th>
+                <th>Age</th>
+                <th>Seat Code</th>
+                <th>Class</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for p in booking.passengers %}
+                <tr>
+                  <td><strong>{{ p.full_name }}</strong></td>
+                  <td>{{ p.gender_selection }}</td>
+                  <td>{{ p.age }}</td>
+                  <td><span class="badge bg-dark fs-6">{{ p.seat_number }}</span></td>
+                  <td><span class="badge bg-light text-dark border">{{ p.cabin_class }}</span></td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Side Invoice -->
+    <div class="col-lg-4">
+      <div class="aviation-card p-4 mb-4">
+        <h6 class="fw-bold text-navy border-bottom pb-2 mb-3"><i class="bi bi-receipt me-1 text-primary"></i>Payment Breakdown</h6>
+        
+        <div class="d-flex justify-content-between py-2 border-bottom small">
+          <span class="text-muted">Payment Mode:</span>
+          <strong>{{ booking.payment_mode }}</strong>
+        </div>
+
+        <div class="d-flex justify-content-between py-2 border-bottom small">
+          <span class="text-muted">Payment Status:</span>
+          <span class="badge bg-success">{{ booking.payment_status }}</span>
+        </div>
+
+        <div class="d-flex justify-content-between py-2 border-bottom small">
+          <span class="text-muted">Base Fare Total:</span>
+          <strong>{{ booking.base_fare_total|currency }}</strong>
+        </div>
+
+        <div class="d-flex justify-content-between py-2 border-bottom small">
+          <span class="text-muted">Seat Selection Surcharges:</span>
+          <strong>{{ booking.seat_charge_total|currency }}</strong>
+        </div>
+
+        <div class="d-flex justify-content-between py-2 border-bottom small">
+          <span class="text-muted">Taxes &amp; Fees (GST &amp; UDF):</span>
+          <strong>{{ booking.taxes_and_fees|currency }}</strong>
+        </div>
+
+        <div class="d-flex justify-content-between py-3 mb-2">
+          <span class="fs-5 fw-bold text-navy">Total Amount:</span>
+          <strong class="fs-4 fw-extrabold text-primary">{{ booking.total_amount|currency }}</strong>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Cancellation Modal -->
+{% if booking.booking_status == 'Confirmed' %}
+  <div class="modal fade" id="cancelModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title fw-bold text-navy">Confirm Journey Cancellation</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <form method="POST" action="{{ url_for('bookings.cancel_booking', booking_id=booking.id) }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <div class="modal-body">
+            <p class="text-muted small">
+              Are you sure you want to cancel booking <strong>{{ booking.booking_reference }}</strong>? 
+              Upon cancellation, your allocated seats will be immediately released back to the aircraft inventory.
+            </p>
+            <div class="mb-3">
+              <label class="form-label small fw-bold text-muted">Cancellation Reason</label>
+              <select name="reason" class="form-select form-select-sm">
+                <option value="Change of travel plans" selected>Change of travel plans</option>
+                <option value="Schedule timing conflict">Schedule timing conflict</option>
+                <option value="Demonstration testing">Demonstration testing</option>
+              </select>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Keep Booking</button>
+            <button type="submit" class="btn btn-danger btn-sm">Yes, Cancel Booking &amp; Release Seats</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+{% endif %}
+{% endblock %}

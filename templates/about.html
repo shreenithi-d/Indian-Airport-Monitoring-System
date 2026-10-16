@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+
+{% block title %}About the System - {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-lg-9">
+      <div class="aviation-card p-4 p-md-5 mb-4">
+        <div class="d-flex align-items-center gap-3 border-bottom pb-3 mb-4">
+          <img src="{{ url_for('static', filename='images/logo.svg') }}" alt="Logo" width="48" height="48">
+          <div>
+            <h3 class="fw-bold text-navy m-0">Indian Airport Monitoring System</h3>
+            <p class="text-muted small m-0">Smart Airport Map, Flight Tracking and Ticket Booking</p>
+          </div>
+        </div>
+
+        <h5 class="fw-bold text-navy mb-2">1. System Identity and Objective</h5>
+        <p class="text-secondary small leading-relaxed">
+          The <strong>Indian Airport Monitoring System (IAMS)</strong> is an integrated aviation management platform engineered to demonstrate high-standard full-stack web architecture. It combines geographical mapping of 110+ verified Indian airports, flight scheduling, status tracking, top-down aircraft cabin visualization with gender-based seat assignments, and transactional ticket booking.
+        </p>
+
+        <h5 class="fw-bold text-navy mt-4 mb-2">2. Architecture &amp; Technology Stack</h5>
+        <div class="row g-3 mb-4">
+          <div class="col-md-6">
+            <div class="p-3 bg-light rounded border h-100">
+              <strong class="text-navy small d-block mb-1"><i class="bi bi-code-slash text-primary me-1"></i>Backend Stack</strong>
+              <ul class="list-unstyled small text-secondary mb-0">
+                <li>&bull; Python 3 &amp; Flask Application Factory</li>
+                <li>&bull; Flask-SQLAlchemy (Relational ORM)</li>
+                <li>&bull; Flask-Login (Session User &amp; Role Authentication)</li>
+                <li>&bull; Flask-WTF &amp; WTForms (CSRF &amp; Form Protection)</li>
+                <li>&bull; SQLite Database (Local &amp; ACID Compliant)</li>
+              </ul>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="p-3 bg-light rounded border h-100">
+              <strong class="text-navy small d-block mb-1"><i class="bi bi-display text-primary me-1"></i>Frontend Stack</strong>
+              <ul class="list-unstyled small text-secondary mb-0">
+                <li>&bull; Bootstrap 5 (Responsive Grid &amp; Modern Components)</li>
+                <li>&bull; Leaflet.js &amp; OpenStreetMap Tiles</li>
+                <li>&bull; Chart.js (Operational Analytics Visualizations)</li>
+                <li>&bull; Custom Aviation CSS &amp; Interactive Seat Map</li>
+                <li>&bull; Vanilla JavaScript (Asynchronous requests &amp; Dom Logic)</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <h5 class="fw-bold text-navy mb-2">3. Gender-Coded Seat Map Innovation</h5>
+        <p class="text-secondary small leading-relaxed">
+          A dedicated capability of this application is the visual gender allocation on aircraft seats. Male travelers are displayed in light blue (<code>#DCEBFF</code> with border <code>#4385E8</code>), female travelers in light pink (<code>#FFE0EC</code> with border <code>#E66B9A</code>), and undisclosed passengers in neutral gray. Backend transaction safety protects against double bookings and releases seats immediately upon cancellation.
+        </p>
+
+        <div class="mt-4 pt-3 border-top d-flex justify-content-between align-items-center">
+          <a href="{{ url_for('airports.map_view') }}" class="btn btn-aviation-primary btn-sm">Explore Map</a>
+          <span class="badge badge-demo">Academic Full-Stack Project</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

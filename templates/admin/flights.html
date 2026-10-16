@@ -1,0 +1,152 @@
+{% extends 'base.html' %}
+
+{% block title %}Manage Flights - Admin Console{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper">
+  <!-- Admin Sidebar -->
+  <aside class="dashboard-sidebar">
+    <div class="sidebar-header">
+      <span class="fw-bold text-white small text-uppercase letter-spacing-1">
+        <i class="bi bi-shield-lock-fill text-warning me-2"></i>Admin Console
+      </span>
+    </div>
+    <ul class="sidebar-menu">
+      <li class="sidebar-item"><a href="{{ url_for('admin.dashboard') }}" class="sidebar-link"><i class="bi bi-speedometer2"></i>Overview</a></li>
+      <li class="sidebar-section-title">Aviation Management</li>
+      <li class="sidebar-item"><a href="{{ url_for('admin.airports') }}" class="sidebar-link"><i class="bi bi-building"></i>Airports</a></li>
+      <li class="sidebar-item"><a href="{{ url_for('admin.flights') }}" class="sidebar-link active"><i class="bi bi-airplane"></i>Flights &amp; Schedules</a></li>
+      <li class="sidebar-item"><a href="{{ url_for('admin.fleet') }}" class="sidebar-link"><i class="bi bi-grid-3x3"></i>Fleet &amp; Seats</a></li>
+      <li class="sidebar-section-title">Passenger Operations</li>
+      <li class="sidebar-item"><a href="{{ url_for('admin.bookings') }}" class="sidebar-link"><i class="bi bi-ticket-perforated"></i>Bookings</a></li>
+      <li class="sidebar-item"><a href="{{ url_for('admin.users') }}" class="sidebar-link"><i class="bi bi-people"></i>Passengers</a></li>
+      <li class="sidebar-section-title">Monitoring &amp; Audit</li>
+      <li class="sidebar-item"><a href="{{ url_for('admin.analytics') }}" class="sidebar-link"><i class="bi bi-bar-chart-line"></i>Analytics</a></li>
+      <li class="sidebar-item"><a href="{{ url_for('admin.audit_logs') }}" class="sidebar-link"><i class="bi bi-journal-text"></i>Audit Logs</a></li>
+      <li class="sidebar-item"><a href="{{ url_for('admin.settings') }}" class="sidebar-link"><i class="bi bi-gear"></i>Settings</a></li>
+    </ul>
+  </aside>
+
+  <!-- Content -->
+  <div class="dashboard-main">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <div>
+        <h4 class="fw-bold text-navy m-0">Flight Schedule &amp; Status Management</h4>
+        <p class="text-muted small m-0">Manage commercial routes, operational statuses, and aircraft allocations</p>
+      </div>
+      <a href="{{ url_for('admin.add_flight') }}" class="btn btn-aviation-primary btn-sm">
+        <i class="bi bi-plus-circle me-1"></i>Add New Flight Schedule
+      </a>
+    </div>
+
+    <!-- Filters -->
+    <div class="aviation-card p-3 mb-4">
+      <form method="GET" action="{{ url_for('admin.flights') }}" class="row g-2 align-items-end">
+        <div class="col-md-5">
+          <label class="form-label small fw-bold text-muted">Search Flight Number</label>
+          <div class="input-group input-group-sm">
+            <span class="input-group-text bg-light"><i class="bi bi-search"></i></span>
+            <input type="text" name="search" class="form-control" placeholder="e.g. AI-101..." value="{{ search }}">
+          </div>
+        </div>
+
+        <div class="col-md-4">
+          <label class="form-label small fw-bold text-muted">Status</label>
+          <select name="status" class="form-select form-select-sm" onchange="this.form.submit()">
+            <option value="All" {% if status == 'All' %}selected{% endif %}>All Operational Statuses</option>
+            <option value="Scheduled" {% if status == 'Scheduled' %}selected{% endif %}>Scheduled</option>
+            <option value="Check-in open" {% if status == 'Check-in open' %}selected{% endif %}>Check-in open</option>
+            <option value="Boarding" {% if status == 'Boarding' %}selected{% endif %}>Boarding</option>
+            <option value="Departed" {% if status == 'Departed' %}selected{% endif %}>Departed</option>
+            <option value="In flight" {% if status == 'In flight' %}selected{% endif %}>In flight</option>
+            <option value="Arrived" {% if status == 'Arrived' %}selected{% endif %}>Arrived</option>
+            <option value="Delayed" {% if status == 'Delayed' %}selected{% endif %}>Delayed</option>
+            <option value="Cancelled" {% if status == 'Cancelled' %}selected{% endif %}>Cancelled</option>
+          </select>
+        </div>
+
+        <div class="col-md-3">
+          <button type="submit" class="btn btn-outline-primary btn-sm w-100">Filter</button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Flights Table -->
+    <div class="aviation-card overflow-hidden">
+      <div class="table-responsive">
+        <table class="table aviation-table mb-0">
+          <thead>
+            <tr>
+              <th>Flight</th>
+              <th>Airline</th>
+              <th>Route</th>
+              <th>Departure Time</th>
+              <th>Aircraft</th>
+              <th>Status</th>
+              <th>Fare</th>
+              <th class="text-end">Update Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for f in flights %}
+              <tr>
+                <td><strong class="font-monospace text-navy">{{ f.flight_number }}</strong></td>
+                <td>{{ f.airline.name }}</td>
+                <td>{{ f.origin_airport.city }} &rarr; {{ f.destination_airport.city }}</td>
+                <td>{{ f.scheduled_departure|datetime }}</td>
+                <td><small class="text-muted">{{ f.aircraft.model }} ({{ f.aircraft.registration }})</small></td>
+                <td>
+                  <span class="badge 
+                    {% if f.status == 'Delayed' %}bg-warning text-dark
+                    {% elif f.status == 'Cancelled' %}bg-danger
+                    {% elif f.status in ['Boarding', 'In flight', 'Departed'] %}bg-primary
+                    {% elif f.status == 'Arrived' %}bg-success
+                    {% else %}bg-secondary{% endif %}">
+                    {{ f.status }}
+                  </span>
+                </td>
+                <td><strong>{{ f.base_fare|currency }}</strong></td>
+                <td class="text-end">
+                  <!-- Quick Status Update Dropdown Form -->
+                  <form method="POST" action="{{ url_for('admin.update_status', flight_id=f.id) }}" class="d-inline-flex gap-1 align-items-center">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <select name="status" class="form-select form-select-sm" style="width: 125px;">
+                      <option value="Scheduled" {% if f.status == 'Scheduled' %}selected{% endif %}>Scheduled</option>
+                      <option value="Check-in open" {% if f.status == 'Check-in open' %}selected{% endif %}>Check-in</option>
+                      <option value="Boarding" {% if f.status == 'Boarding' %}selected{% endif %}>Boarding</option>
+                      <option value="Departed" {% if f.status == 'Departed' %}selected{% endif %}>Departed</option>
+                      <option value="In flight" {% if f.status == 'In flight' %}selected{% endif %}>In Flight</option>
+                      <option value="Arrived" {% if f.status == 'Arrived' %}selected{% endif %}>Arrived</option>
+                      <option value="Delayed" {% if f.status == 'Delayed' %}selected{% endif %}>Delayed</option>
+                      <option value="Cancelled" {% if f.status == 'Cancelled' %}selected{% endif %}>Cancelled</option>
+                    </select>
+                    <button type="submit" class="btn btn-sm btn-outline-primary" title="Update Status">
+                      <i class="bi bi-arrow-repeat"></i>
+                    </button>
+                  </form>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      {% if pagination.pages > 1 %}
+        <div class="p-3 border-top d-flex justify-content-between align-items-center">
+          <small class="text-muted">Showing page {{ pagination.page }} of {{ pagination.pages }}</small>
+          <ul class="pagination pagination-sm m-0">
+            {% if pagination.has_prev %}
+              <li class="page-item"><a class="page-link" href="{{ url_for('admin.flights', page=pagination.prev_num, search=search, status=status) }}">Prev</a></li>
+            {% endif %}
+            <li class="page-item active"><span class="page-link">{{ pagination.page }}</span></li>
+            {% if pagination.has_next %}
+              <li class="page-item"><a class="page-link" href="{{ url_for('admin.flights', page=pagination.next_num, search=search, status=status) }}">Next</a></li>
+            {% endif %}
+          </ul>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

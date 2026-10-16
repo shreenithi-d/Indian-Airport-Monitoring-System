@@ -1,0 +1,284 @@
+{% extends 'base.html' %}
+
+{% block title %}Select Aircraft Seats - Flight {{ flight.flight_number }} | {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <!-- Breadcrumb -->
+  <nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb small">
+      <li class="breadcrumb-item"><a href="{{ url_for('main.landing') }}">Home</a></li>
+      <li class="breadcrumb-item"><a href="{{ url_for('flights.search') }}">Flights</a></li>
+      <li class="breadcrumb-item"><a href="{{ url_for('flights.details', flight_id=flight.id) }}">{{ flight.flight_number }}</a></li>
+      <li class="breadcrumb-item active" aria-current="page">Seat Selection</li>
+    </ol>
+  </nav>
+
+  <!-- Flight Summary Bar -->
+  <div class="aviation-card p-3 mb-4 bg-white">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center">
+      <div class="d-flex align-items-center gap-3">
+        <div class="p-2 bg-light rounded text-center" style="width: 44px; height: 44px;">
+          <i class="bi bi-airplane-engines-fill text-primary fs-4"></i>
+        </div>
+        <div>
+          <span class="badge bg-dark font-monospace">{{ flight.flight_number }}</span>
+          <span class="badge bg-primary">{{ flight.airline.name }}</span>
+          <h5 class="fw-bold text-navy mb-0">
+            {{ flight.origin_airport.city }} ({{ flight.origin_airport.iata_code or flight.origin_airport.icao_code }}) 
+            <i class="bi bi-arrow-right text-primary mx-1"></i> 
+            {{ flight.destination_airport.city }} ({{ flight.destination_airport.iata_code or flight.destination_airport.icao_code }})
+          </h5>
+          <small class="text-muted">{{ flight.scheduled_departure|datetime }} &bull; {{ flight.aircraft.model }}</small>
+        </div>
+      </div>
+
+      <div class="mt-3 mt-md-0 text-md-end">
+        <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-3 py-2">
+          <i class="bi bi-people-fill me-1"></i>Passengers to Seat: <strong id="required-passengers-count">{{ passengers_count }}</strong>
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-4">
+    <!-- Left: Legend & Details -->
+    <div class="col-lg-4 order-2 order-lg-1">
+      <!-- Seat Map Legend Card -->
+      <div class="seat-legend-card mb-4">
+        <h6 class="fw-bold text-navy mb-3"><i class="bi bi-info-circle me-1 text-primary"></i>Seat Assignment Legend</h6>
+        
+        <div class="d-flex flex-column gap-2 small">
+          <!-- Available -->
+          <div class="d-flex align-items-center gap-2">
+            <span class="legend-swatch swatch-available"><i class="bi bi-check"></i></span>
+            <div>
+              <strong>Available Seat</strong>
+              <div class="text-muted" style="font-size: 0.72rem;">Click to select for your passenger</div>
+            </div>
+          </div>
+
+          <!-- Selected by current user -->
+          <div class="d-flex align-items-center gap-2">
+            <span class="legend-swatch swatch-selected"><i class="bi bi-person-check-fill"></i></span>
+            <div>
+              <strong>Selected by You</strong>
+              <div class="text-muted" style="font-size: 0.72rem;">Your active seat choice</div>
+            </div>
+          </div>
+
+          <!-- Male Passenger Assigned (Blue) -->
+          <div class="d-flex align-items-center gap-2 p-1 rounded" style="background: rgba(220, 235, 255, 0.4);">
+            <span class="legend-swatch swatch-male"><i class="bi bi-gender-male"></i></span>
+            <div>
+              <strong style="color: #2166C2;">Male Passenger Assignment</strong>
+              <div class="text-muted" style="font-size: 0.72rem;">Confirmed seat occupied by male traveler (#DCEBFF)</div>
+            </div>
+          </div>
+
+          <!-- Female Passenger Assigned (Pink) -->
+          <div class="d-flex align-items-center gap-2 p-1 rounded" style="background: rgba(255, 224, 236, 0.4);">
+            <span class="legend-swatch swatch-female"><i class="bi bi-gender-female"></i></span>
+            <div>
+              <strong style="color: #C43D75;">Female Passenger Assignment</strong>
+              <div class="text-muted" style="font-size: 0.72rem;">Confirmed seat occupied by female traveler (#FFE0EC)</div>
+            </div>
+          </div>
+
+          <!-- Neutral Occupied -->
+          <div class="d-flex align-items-center gap-2">
+            <span class="legend-swatch swatch-occupied"><i class="bi bi-person-fill"></i></span>
+            <div>
+              <strong>Occupied (Other / Undisclosed)</strong>
+              <div class="text-muted" style="font-size: 0.72rem;">Seat assigned without gender disclosure</div>
+            </div>
+          </div>
+
+          <!-- Restricted -->
+          <div class="d-flex align-items-center gap-2">
+            <span class="legend-swatch swatch-restricted"><i class="bi bi-lock-fill"></i></span>
+            <div>
+              <strong>Restricted / Crew Only</strong>
+              <div class="text-muted" style="font-size: 0.72rem;">Reserved operational seats</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pricing & Summary Panel -->
+      <div class="aviation-card p-4 sticky-seat-summary">
+        <h6 class="fw-bold text-navy mb-3"><i class="bi bi-receipt me-1 text-primary"></i>Selection Summary</h6>
+
+        <input type="hidden" id="base-fare-per-pax" value="{{ flight.base_fare }}">
+
+        <div class="d-flex justify-content-between py-2 border-bottom small">
+          <span class="text-muted">Selected Seats:</span>
+          <div id="selected-seat-codes" class="fw-bold text-navy">
+            <span class="text-muted">None selected yet</span>
+          </div>
+        </div>
+
+        <div class="d-flex justify-content-between py-2 border-bottom small">
+          <span class="text-muted">Progress:</span>
+          <span><strong id="selected-seats-count" class="text-primary">0</strong> / {{ passengers_count }} seats</span>
+        </div>
+
+        <div class="d-flex justify-content-between py-2 border-bottom small">
+          <span class="text-muted">Base Fare ({{ passengers_count }} pax):</span>
+          <strong class="text-navy">{{ (flight.base_fare * passengers_count)|currency }}</strong>
+        </div>
+
+        <div class="d-flex justify-content-between py-2 border-bottom small">
+          <span class="text-muted">Additional Seat Fees:</span>
+          <strong id="seat-charges-total" class="text-navy">₹0.00</strong>
+        </div>
+
+        <div class="d-flex justify-content-between py-2 border-bottom small">
+          <span class="text-muted">Estimated Taxes &amp; Fees (5% + UDF):</span>
+          <span class="text-muted">Calculated on review</span>
+        </div>
+
+        <div class="d-flex justify-content-between py-3 mb-3">
+          <span class="fw-bold text-navy">Estimated Grand Total:</span>
+          <strong class="fs-4 text-navy fw-extrabold" id="grand-total-amount">
+            {{ (flight.base_fare * passengers_count)|currency }}
+          </strong>
+        </div>
+
+        <!-- Submit Form -->
+        <form action="{{ url_for('bookings.enter_passengers') }}" method="GET" id="seat-selection-form">
+          <input type="hidden" name="flight_id" value="{{ flight.id }}">
+          <input type="hidden" name="seat_ids" id="hidden-seat-ids" value="">
+          
+          <button type="submit" id="proceed-to-passengers-btn" class="btn btn-secondary w-100 py-2 fw-bold" disabled>
+            Select {{ passengers_count }} seat(s) to continue
+          </button>
+        </form>
+
+        <div class="mt-2 text-center text-muted" style="font-size: 0.72rem;">
+          <i class="bi bi-shield-check me-1"></i>Seats are reserved securely during checkout.
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: Aircraft Cabin Visualization -->
+    <div class="col-lg-8 order-1 order-lg-2 text-center">
+      <div class="aircraft-fuselage">
+        <!-- Nose & Cockpit -->
+        <div class="aircraft-nose">
+          <i class="bi bi-airplane-fill me-1"></i>Aircraft Front
+        </div>
+        <div class="cockpit-windows">
+          <div class="windscreen"></div>
+          <div class="windscreen"></div>
+          <div class="windscreen"></div>
+        </div>
+
+        <!-- Wings -->
+        <div class="wing-indicator-left"></div>
+        <div class="wing-indicator-right"></div>
+
+        <!-- Seat Letters Header -->
+        <div class="seat-letters-header">
+          <div>A</div>
+          <div>B</div>
+          <div>C</div>
+          <div class="seat-aisle"><i class="bi bi-arrow-down-up" style="font-size: 0.65rem;"></i></div>
+          <div>D</div>
+          <div>E</div>
+          <div>F</div>
+        </div>
+
+        <!-- Rows Loop -->
+        {% for r in seat_map.rows %}
+          <!-- Cabin Class Dividers -->
+          {% if r.row_number == 1 %}
+            <div class="cabin-divider">
+              <span class="cabin-divider-badge"><i class="bi bi-star-fill text-warning me-1"></i>Business Class (Rows 1-2)</span>
+            </div>
+          {% elif r.row_number == 3 %}
+            <div class="cabin-divider">
+              <span class="cabin-divider-badge"><i class="bi bi-gem me-1 text-primary"></i>Premium Economy (Rows 3-5)</span>
+            </div>
+          {% elif r.row_number == 6 %}
+            <div class="cabin-divider">
+              <span class="cabin-divider-badge">Economy Class (Rows 6-30)</span>
+            </div>
+          {% endif %}
+
+          <!-- Emergency Exit Row Banner -->
+          {% if r.is_exit_row and r.row_number == 12 %}
+            <div class="exit-row-banner">
+              <i class="bi bi-exclamation-triangle-fill me-1"></i>EMERGENCY EXIT ROWS &bull; EXTRA LEGROOM
+            </div>
+          {% endif %}
+
+          <!-- Seat Row -->
+          <div class="seat-row-container">
+            <span class="row-label">{{ r.row_number }}</span>
+
+            <!-- First 3 seats (A, B, C) -->
+            {% for s in r.seats[:3] %}
+              <button type="button"
+                class="aircraft-seat-btn 
+                  {% if s.gender_color == 'male' %}seat-occupied-male
+                  {% elif s.gender_color == 'female' %}seat-occupied-female
+                  {% elif s.gender_color == 'other' %}seat-occupied-other
+                  {% elif s.state == 'held' %}seat-state-held
+                  {% elif s.state == 'restricted' %}seat-state-restricted
+                  {% elif s.state == 'available' %}seat-state-available
+                  {% endif %}"
+                data-seat-id="{{ s.id }}"
+                data-seat-code="{{ s.seat_code }}"
+                data-seat-charge="{{ s.charge }}"
+                title="Seat {{ s.seat_code }} ({{ s.cabin_class }} - {{ s.seat_type }}) {% if s.charge > 0 %}+{{ s.charge|currency }}{% endif %} - Status: {{ s.gender_color if s.gender_color in ['male', 'female'] else s.state }}">
+                <i class="bi 
+                  {% if s.gender_color == 'male' %}bi-gender-male
+                  {% elif s.gender_color == 'female' %}bi-gender-female
+                  {% elif s.gender_color == 'other' %}bi-person-fill
+                  {% elif s.state == 'restricted' %}bi-lock-fill
+                  {% else %}bi-badge-ad{% endif %}">
+                </i>
+                <span>{{ s.letter }}</span>
+              </button>
+            {% endfor %}
+
+            <!-- Aisle -->
+            <span class="seat-aisle">{{ r.row_number }}</span>
+
+            <!-- Last 3 seats (D, E, F) -->
+            {% for s in r.seats[3:] %}
+              <button type="button"
+                class="aircraft-seat-btn 
+                  {% if s.gender_color == 'male' %}seat-occupied-male
+                  {% elif s.gender_color == 'female' %}seat-occupied-female
+                  {% elif s.gender_color == 'other' %}seat-occupied-other
+                  {% elif s.state == 'held' %}seat-state-held
+                  {% elif s.state == 'restricted' %}seat-state-restricted
+                  {% elif s.state == 'available' %}seat-state-available
+                  {% endif %}"
+                data-seat-id="{{ s.id }}"
+                data-seat-code="{{ s.seat_code }}"
+                data-seat-charge="{{ s.charge }}"
+                title="Seat {{ s.seat_code }} ({{ s.cabin_class }} - {{ s.seat_type }}) {% if s.charge > 0 %}+{{ s.charge|currency }}{% endif %} - Status: {{ s.gender_color if s.gender_color in ['male', 'female'] else s.state }}">
+                <i class="bi 
+                  {% if s.gender_color == 'male' %}bi-gender-male
+                  {% elif s.gender_color == 'female' %}bi-gender-female
+                  {% elif s.gender_color == 'other' %}bi-person-fill
+                  {% elif s.state == 'restricted' %}bi-lock-fill
+                  {% else %}bi-badge-ad{% endif %}">
+                </i>
+                <span>{{ s.letter }}</span>
+              </button>
+            {% endfor %}
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{{ url_for('static', filename='js/seat-selection.js') }}"></script>
+{% endblock %}

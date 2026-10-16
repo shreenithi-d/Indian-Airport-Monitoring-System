@@ -1,0 +1,403 @@
+{% extends 'base.html' %}
+
+{% block title %}Indian Airport Monitoring System - Smart Airport Map & Flight Tracking{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-aviation">
+  <div class="container py-4">
+    <div class="row align-items-center g-5">
+      <div class="col-lg-7">
+        <div class="d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill bg-white bg-opacity-10 text-cyan mb-3 border border-white border-opacity-20">
+          <i class="bi bi-broadcast text-info"></i>
+          <span class="small fw-semibold text-white">Live Aviation Monitoring &bull; 110 Verified Indian Airports</span>
+        </div>
+        <h1 class="display-4 fw-extrabold text-white mb-3" style="letter-spacing: -1px; line-height: 1.15;">
+          Your Gateway to Smarter <span style="background: linear-gradient(90deg, #39A0FF, #42D9F5); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Airport Monitoring</span>
+        </h1>
+        <p class="lead text-light text-opacity-75 mb-4">
+          Explore Indian airports across all 28 states & union territories, monitor operational flight schedules, discover illustrative routes, select aircraft seats, and manage journeys through one integrated intelligent aviation platform.
+        </p>
+        <div class="d-flex flex-wrap gap-3">
+          <a href="{{ url_for('airports.map_view') }}" class="btn btn-aviation-primary btn-lg px-4">
+            <i class="bi bi-geo-alt-fill me-2"></i>Explore Smart Map
+          </a>
+          <a href="{{ url_for('flights.search') }}" class="btn btn-aviation-cyan btn-lg px-4">
+            <i class="bi bi-airplane me-2"></i>Search Flights
+          </a>
+          <a href="{{ url_for('flights.track_search') }}" class="btn btn-outline-light btn-lg px-4">
+            <i class="bi bi-radar me-2"></i>Track Flight
+          </a>
+        </div>
+      </div>
+
+      <div class="col-lg-5 text-center">
+        <div class="p-4 rounded-4" style="background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px);">
+          <img src="{{ url_for('static', filename='images/logo.svg') }}" alt="Aviation Logo" class="mb-3" width="90" height="90">
+          <h4 class="text-white fw-bold mb-1">Central Aviation Platform</h4>
+          <p class="small text-light text-opacity-75 mb-3">Real-time reference data across commercial, international, and defense civil enclaves.</p>
+          <div class="row g-2 text-start">
+            <div class="col-6">
+              <div class="p-2 rounded bg-black bg-opacity-25 border border-white border-opacity-10">
+                <small class="text-muted d-block">Map Engine</small>
+                <strong class="text-white small">Leaflet &amp; OSM</strong>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="p-2 rounded bg-black bg-opacity-25 border border-white border-opacity-10">
+                <small class="text-muted d-block">Cabin Visualizer</small>
+                <strong class="text-white small">Gender-Coded Seats</strong>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="p-2 rounded bg-black bg-opacity-25 border border-white border-opacity-10">
+                <small class="text-muted d-block">Dataset Size</small>
+                <strong class="text-white small">110 Verified Airports</strong>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="p-2 rounded bg-black bg-opacity-25 border border-white border-opacity-10">
+                <small class="text-muted d-block">Backend Engine</small>
+                <strong class="text-white small">Python Flask &amp; SQL</strong>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Quick Flight Search Widget -->
+<div class="container">
+  <div class="hero-search-card">
+    <div class="d-flex align-items-center justify-content-between mb-3 border-bottom pb-2">
+      <div class="d-flex align-items-center gap-2">
+        <i class="bi bi-airplane-engines text-primary fs-4"></i>
+        <h5 class="fw-bold m-0 text-navy">Quick Flight Search</h5>
+      </div>
+      <span class="badge bg-light text-dark border">Direct Indian Routes</span>
+    </div>
+
+    <form action="{{ url_for('flights.search') }}" method="GET" id="flight-search-form">
+      <div class="row g-3 align-items-end">
+        <div class="col-md-3">
+          <label class="form-label small fw-bold text-muted">Origin Airport</label>
+          <div class="input-group">
+            <span class="input-group-text bg-light"><i class="bi bi-geo-alt text-primary"></i></span>
+            <select name="origin_id" id="search-origin" class="form-select" required>
+              <option value="" disabled selected>Select Origin Airport</option>
+              {% for apt in airports %}
+                <option value="{{ apt.id }}">{{ apt.city }} ({{ apt.iata_code or apt.icao_code }}) - {{ apt.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+
+        <div class="col-md-1 text-center d-none d-md-block">
+          <button type="button" class="btn btn-light rounded-circle shadow-sm border" id="swap-airports-btn" title="Swap Airports">
+            <i class="bi bi-arrow-left-right text-primary"></i>
+          </button>
+        </div>
+
+        <div class="col-md-3">
+          <label class="form-label small fw-bold text-muted">Destination Airport</label>
+          <div class="input-group">
+            <span class="input-group-text bg-light"><i class="bi bi-pin-map text-danger"></i></span>
+            <select name="destination_id" id="search-dest" class="form-select" required>
+              <option value="" disabled selected>Select Destination Airport</option>
+              {% for apt in airports %}
+                <option value="{{ apt.id }}">{{ apt.city }} ({{ apt.iata_code or apt.icao_code }}) - {{ apt.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+
+        <div class="col-md-2">
+          <label class="form-label small fw-bold text-muted">Departure Date</label>
+          <div class="input-group">
+            <span class="input-group-text bg-light"><i class="bi bi-calendar-event"></i></span>
+            <input type="date" name="travel_date" id="search-date" class="form-select" value="{{ now }}">
+          </div>
+        </div>
+
+        <div class="col-md-1">
+          <label class="form-label small fw-bold text-muted">Passengers</label>
+          <select name="passengers" class="form-select">
+            <option value="1" selected>1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+          </select>
+        </div>
+
+        <div class="col-md-2">
+          <button type="submit" class="btn btn-aviation-primary w-100 py-2">
+            <i class="bi bi-search me-1"></i>Search Flights
+          </button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Live Operational Statistics -->
+<section class="py-5">
+  <div class="container">
+    <div class="d-flex align-items-center justify-content-between mb-4">
+      <div>
+        <h4 class="fw-bold text-navy mb-1">Aviation Operational Overview</h4>
+        <p class="text-muted small mb-0">Live aggregated statistics directly queried from database records</p>
+      </div>
+      <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-3 py-2">
+        <i class="bi bi-circle-fill me-1 small animate-pulse"></i>Database Active
+      </span>
+    </div>
+
+    <div class="row g-3">
+      <div class="col-6 col-md-4 col-lg-2">
+        <div class="stat-box h-100">
+          <div class="stat-icon-wrapper bg-primary bg-opacity-10 text-primary">
+            <i class="bi bi-building"></i>
+          </div>
+          <div>
+            <div class="stat-val">{{ stats.total_airports }}</div>
+            <p class="stat-lbl">Airports Registered</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-6 col-md-4 col-lg-2">
+        <div class="stat-box h-100">
+          <div class="stat-icon-wrapper bg-info bg-opacity-10 text-info">
+            <i class="bi bi-airplane"></i>
+          </div>
+          <div>
+            <div class="stat-val">{{ stats.total_flights }}</div>
+            <p class="stat-lbl">Flights Scheduled</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-6 col-md-4 col-lg-2">
+        <div class="stat-box h-100">
+          <div class="stat-icon-wrapper bg-success bg-opacity-10 text-success">
+            <i class="bi bi-box-arrow-up-right"></i>
+          </div>
+          <div>
+            <div class="stat-val">{{ stats.total_departures }}</div>
+            <p class="stat-lbl">Departures</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-6 col-md-4 col-lg-2">
+        <div class="stat-box h-100">
+          <div class="stat-icon-wrapper bg-indigo bg-opacity-10 text-primary">
+            <i class="bi bi-ticket-detailed"></i>
+          </div>
+          <div>
+            <div class="stat-val">{{ stats.total_bookings }}</div>
+            <p class="stat-lbl">Active Bookings</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-6 col-md-4 col-lg-2">
+        <div class="stat-box h-100">
+          <div class="stat-icon-wrapper bg-warning bg-opacity-10 text-warning">
+            <i class="bi bi-clock-history"></i>
+          </div>
+          <div>
+            <div class="stat-val">{{ stats.delayed_flights }}</div>
+            <p class="stat-lbl">Delayed Flights</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-6 col-md-4 col-lg-2">
+        <div class="stat-box h-100">
+          <div class="stat-icon-wrapper bg-secondary bg-opacity-10 text-secondary">
+            <i class="bi bi-geo-alt"></i>
+          </div>
+          <div>
+            <div class="stat-val">28+</div>
+            <p class="stat-lbl">States &amp; UTs</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Featured Airports Discovery -->
+<section class="py-5 bg-white border-top border-bottom">
+  <div class="container">
+    <div class="d-flex align-items-center justify-content-between mb-4">
+      <div>
+        <h4 class="fw-bold text-navy mb-1">Discover Indian Aviation Hubs</h4>
+        <p class="text-muted small mb-0">High-volume international gateways and strategic civil enclaves</p>
+      </div>
+      <a href="{{ url_for('airports.airport_list') }}" class="btn btn-outline-primary btn-sm">
+        View All 110 Airports <i class="bi bi-arrow-right ms-1"></i>
+      </a>
+    </div>
+
+    <div class="row g-4">
+      {% for apt in featured_airports %}
+        <div class="col-md-6 col-lg-3">
+          <div class="aviation-card h-100 d-flex flex-column">
+            <div class="p-3 border-bottom d-flex justify-content-between align-items-center bg-light rounded-top">
+              <span class="badge badge-international">{{ apt.category }}</span>
+              <span class="badge bg-dark fw-bold">{{ apt.iata_code }}</span>
+            </div>
+            <div class="p-3 flex-grow-1">
+              <h6 class="fw-bold text-navy mb-1">{{ apt.name }}</h6>
+              <p class="text-muted small mb-2"><i class="bi bi-geo-alt-fill text-danger me-1"></i>{{ apt.city }}, {{ apt.state }}</p>
+              <p class="text-secondary small mb-3 text-truncate-2" style="font-size: 0.82rem; height: 38px;">
+                {{ apt.description or 'Major operational aviation gateway in India.' }}
+              </p>
+              <div class="d-flex justify-content-between text-muted small py-2 border-top border-bottom">
+                <span>Terminals: <strong>{{ apt.terminals or 'T1' }}</strong></span>
+                <span>Status: <strong class="text-success">{{ apt.operational_status }}</strong></span>
+              </div>
+            </div>
+            <div class="p-3 bg-light border-top rounded-bottom d-flex gap-2">
+              <a href="{{ url_for('airports.map_view', selected_id=apt.id) }}" class="btn btn-sm btn-outline-secondary w-50" title="View on Map">
+                <i class="bi bi-map me-1"></i>Map
+              </a>
+              <a href="{{ url_for('airports.airport_details', airport_id=apt.id) }}" class="btn btn-sm btn-aviation-primary w-50">
+                <i class="bi bi-info-circle me-1"></i>Details
+              </a>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- How the System Works -->
+<section class="py-5 bg-light">
+  <div class="container">
+    <div class="text-center max-w-700 mx-auto mb-5">
+      <h4 class="fw-bold text-navy">Integrated Passenger &amp; Operations Journey</h4>
+      <p class="text-muted">From geographical exploration to gender-coded seat selection and boarding-pass preview</p>
+    </div>
+
+    <div class="row g-4 text-center">
+      <div class="col-md-3">
+        <div class="p-4 bg-white rounded-3 shadow-sm h-100 border">
+          <div class="stat-icon-wrapper bg-primary bg-opacity-10 text-primary mx-auto mb-3" style="width: 60px; height: 60px;">
+            <i class="bi bi-map-fill fs-3"></i>
+          </div>
+          <h6 class="fw-bold text-navy">1. Explore Airports</h6>
+          <p class="small text-muted mb-0">Browse 110+ airports with interactive Leaflet map markers, coordinates, and terminal information.</p>
+        </div>
+      </div>
+
+      <div class="col-md-3">
+        <div class="p-4 bg-white rounded-3 shadow-sm h-100 border">
+          <div class="stat-icon-wrapper bg-info bg-opacity-10 text-info mx-auto mb-3" style="width: 60px; height: 60px;">
+            <i class="bi bi-airplane-fill fs-3"></i>
+          </div>
+          <h6 class="fw-bold text-navy">2. Select Flight Route</h6>
+          <p class="small text-muted mb-0">Search schedules across Air India, IndiGo, SpiceJet, and Vistara with transparent fare breakdowns.</p>
+        </div>
+      </div>
+
+      <div class="col-md-3">
+        <div class="p-4 bg-white rounded-3 shadow-sm h-100 border">
+          <div class="stat-icon-wrapper bg-warning bg-opacity-10 text-warning mx-auto mb-3" style="width: 60px; height: 60px;">
+            <i class="bi bi-grid-3x3-gap-fill fs-3"></i>
+          </div>
+          <h6 class="fw-bold text-navy">3. Interactive Seat Map</h6>
+          <p class="small text-muted mb-0">Choose seats in top-down cabin layout with distinct Male (Blue) and Female (Pink) assignments.</p>
+        </div>
+      </div>
+
+      <div class="col-md-3">
+        <div class="p-4 bg-white rounded-3 shadow-sm h-100 border">
+          <div class="stat-icon-wrapper bg-success bg-opacity-10 text-success mx-auto mb-3" style="width: 60px; height: 60px;">
+            <i class="bi bi-qr-code-scan fs-3"></i>
+          </div>
+          <h6 class="fw-bold text-navy">4. Boarding Pass Preview</h6>
+          <p class="small text-muted mb-0">Receive a unique booking reference and view boarding passes with verification QR preview.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Frequently Asked Questions -->
+<section class="py-5 bg-white border-top">
+  <div class="container">
+    <div class="text-center mb-5">
+      <h4 class="fw-bold text-navy">Frequently Asked Questions</h4>
+      <p class="text-muted">Everything you need to know about this aviation platform</p>
+    </div>
+
+    <div class="row justify-content-center">
+      <div class="col-lg-8">
+        <div class="accordion shadow-sm" id="aviationFaq">
+          <div class="accordion-item">
+            <h2 class="accordion-header">
+              <button class="accordion-button fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#faq1">
+                How is the Indian airport dataset compiled and verified?
+              </button>
+            </h2>
+            <div id="faq1" class="accordion-collapse collapse show" data-bs-parent="#aviationFaq">
+              <div class="accordion-body text-secondary small">
+                The application features 110 verified Indian airports with genuine geographical coordinates, official IATA and ICAO codes, airport categories (International, Domestic, Customs, Defense Civil Enclave), and operational statuses verified from civil aviation reference records.
+              </div>
+            </div>
+          </div>
+
+          <div class="accordion-item">
+            <h2 class="accordion-header">
+              <button class="accordion-button collapsed fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#faq2">
+                How does the aircraft cabin seat map color coding work?
+              </button>
+            </h2>
+            <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#aviationFaq">
+              <div class="accordion-body text-secondary small">
+                The seat map provides an interactive top-down aircraft layout. Confirmed male passenger seats are visually indicated in light blue (<code>#DCEBFF</code> with border <code>#4385E8</code>), female passenger seats are indicated in light pink (<code>#FFE0EC</code> with border <code>#E66B9A</code>), available seats in green, and held or restricted seats with dedicated badges.
+              </div>
+            </div>
+          </div>
+
+          <div class="accordion-item">
+            <h2 class="accordion-header">
+              <button class="accordion-button collapsed fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#faq3">
+                How does the application prevent double booking?
+              </button>
+            </h2>
+            <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#aviationFaq">
+              <div class="accordion-body text-secondary small">
+                Seat availability is strictly enforced on the server within atomic database transactions. The system checks active reservations before confirming bookings and automatically rolls back if a concurrency conflict arises.
+              </div>
+            </div>
+          </div>
+
+          <div class="accordion-item">
+            <h2 class="accordion-header">
+              <button class="accordion-button collapsed fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#faq4">
+                Is this platform connected to live commercial banking gateways?
+              </button>
+            </h2>
+            <div id="faq4" class="accordion-collapse collapse" data-bs-parent="#aviationFaq">
+              <div class="accordion-body text-secondary small">
+                No. As an academic full-stack project, all payments and boarding passes are clearly labeled as demonstration records. No actual financial charges are made, and no real passenger identity documents are stored.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{{ url_for('static', filename='js/flight-search.js') }}"></script>
+{% endblock %}

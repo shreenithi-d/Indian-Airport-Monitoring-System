@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+
+{% block title %}Operational Analytics - Admin Console{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper">
+  <!-- Admin Sidebar -->
+  <aside class="dashboard-sidebar">
+    <div class="sidebar-header">
+      <span class="fw-bold text-white small text-uppercase letter-spacing-1">
+        <i class="bi bi-shield-lock-fill text-warning me-2"></i>Admin Console
+      </span>
+    </div>
+    <ul class="sidebar-menu">
+      <li class="sidebar-item"><a href="{{ url_for('admin.dashboard') }}" class="sidebar-link"><i class="bi bi-speedometer2"></i>Overview</a></li>
+      <li class="sidebar-section-title">Aviation Management</li>
+      <li class="sidebar-item"><a href="{{ url_for('admin.airports') }}" class="sidebar-link"><i class="bi bi-building"></i>Airports</a></li>
+      <li class="sidebar-item"><a href="{{ url_for('admin.flights') }}" class="sidebar-link"><i class="bi bi-airplane"></i>Flights &amp; Schedules</a></li>
+      <li class="sidebar-item"><a href="{{ url_for('admin.fleet') }}" class="sidebar-link"><i class="bi bi-grid-3x3"></i>Fleet &amp; Seats</a></li>
+      <li class="sidebar-section-title">Passenger Operations</li>
+      <li class="sidebar-item"><a href="{{ url_for('admin.bookings') }}" class="sidebar-link"><i class="bi bi-ticket-perforated"></i>Bookings</a></li>
+      <li class="sidebar-item"><a href="{{ url_for('admin.users') }}" class="sidebar-link"><i class="bi bi-people"></i>Passengers</a></li>
+      <li class="sidebar-section-title">Monitoring &amp; Audit</li>
+      <li class="sidebar-item"><a href="{{ url_for('admin.analytics') }}" class="sidebar-link active"><i class="bi bi-bar-chart-line"></i>Analytics</a></li>
+      <li class="sidebar-item"><a href="{{ url_for('admin.audit_logs') }}" class="sidebar-link"><i class="bi bi-journal-text"></i>Audit Logs</a></li>
+      <li class="sidebar-item"><a href="{{ url_for('admin.settings') }}" class="sidebar-link"><i class="bi bi-gear"></i>Settings</a></li>
+    </ul>
+  </aside>
+
+  <!-- Content -->
+  <div class="dashboard-main">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <div>
+        <h4 class="fw-bold text-navy m-0">Aviation Operations Analytics</h4>
+        <p class="text-muted small m-0">Live aggregated metrics and charts calculated from database records</p>
+      </div>
+      <span class="badge bg-primary bg-opacity-10 text-primary border border-primary px-3 py-2">
+        <i class="bi bi-graph-up me-1"></i>Real-time Aggregation
+      </span>
+    </div>
+
+    <!-- Charts Grid -->
+    <div class="row g-4 mb-4">
+      <div class="col-lg-6">
+        <div class="aviation-card p-4 h-100">
+          <h6 class="fw-bold text-navy mb-3"><i class="bi bi-pie-chart text-primary me-2"></i>Airport Distribution by Category</h6>
+          <div style="height: 280px;" class="d-flex align-items-center justify-content-center">
+            <canvas id="airportCategoriesChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-6">
+        <div class="aviation-card p-4 h-100">
+          <h6 class="fw-bold text-navy mb-3"><i class="bi bi-bar-chart text-primary me-2"></i>Flight Status Distribution</h6>
+          <div style="height: 280px;">
+            <canvas id="flightStatusChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-6">
+        <div class="aviation-card p-4 h-100">
+          <h6 class="fw-bold text-navy mb-3"><i class="bi bi-check2-circle text-primary me-2"></i>Booking Status Ratio</h6>
+          <div style="height: 280px;" class="d-flex align-items-center justify-content-center">
+            <canvas id="bookingStatusChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-6">
+        <div class="aviation-card p-4 h-100">
+          <h6 class="fw-bold text-navy mb-3"><i class="bi bi-bar-chart-steps text-primary me-2"></i>Top Scheduled Routes</h6>
+          <div style="height: 280px;">
+            <canvas id="topRoutesChart"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{{ url_for('static', filename='js/admin.js') }}"></script>
+{% endblock %}

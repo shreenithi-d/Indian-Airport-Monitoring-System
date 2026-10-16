@@ -1,0 +1,206 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ airport.name }} ({{ airport.iata_code or airport.icao_code }}) - Details{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <!-- Breadcrumb -->
+  <nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb small">
+      <li class="breadcrumb-item"><a href="{{ url_for('main.landing') }}">Home</a></li>
+      <li class="breadcrumb-item"><a href="{{ url_for('airports.airport_list') }}">Airports</a></li>
+      <li class="breadcrumb-item active" aria-current="page">{{ airport.city }}</li>
+    </ol>
+  </nav>
+
+  <!-- Airport Overview Card -->
+  <div class="aviation-card p-4 mb-4">
+    <div class="row g-4 align-items-center">
+      <div class="col-md-8">
+        <div class="d-flex align-items-center gap-2 mb-2">
+          <span class="badge badge-{{ airport.category.lower() }}">{{ airport.category }} Airport</span>
+          <span class="badge badge-{{ 'operational' if airport.operational_status == 'Operational' else 'non-operational' }}">
+            {{ airport.operational_status }}
+          </span>
+          <span class="badge bg-secondary">Terminals: {{ airport.terminals or 'T1' }}</span>
+        </div>
+        <h2 class="fw-bold text-navy mb-1">{{ airport.name }}</h2>
+        <p class="text-muted mb-3"><i class="bi bi-geo-alt-fill text-danger me-1"></i>{{ airport.city }}, {{ airport.state }}, India</p>
+        <p class="text-secondary mb-3">{{ airport.description or 'Operational civil aviation airport in India.' }}</p>
+
+        <div class="d-flex flex-wrap gap-2">
+          <a href="{{ url_for('airports.map_view', selected_id=airport.id) }}" class="btn btn-sm btn-aviation-primary">
+            <i class="bi bi-geo-alt me-1"></i>View on Interactive Map
+          </a>
+          <a href="{{ url_for('flights.search', origin_id=airport.id) }}" class="btn btn-sm btn-aviation-cyan">
+            <i class="bi bi-search me-1"></i>Find Flights from {{ airport.city }}
+          </a>
+        </div>
+      </div>
+
+      <div class="col-md-4">
+        <div class="p-3 bg-light rounded-3 border">
+          <h6 class="fw-bold text-navy border-bottom pb-2 mb-2 small text-uppercase">Technical Identifiers</h6>
+          <div class="d-flex justify-content-between py-1 small border-bottom">
+            <span class="text-muted">IATA Code:</span>
+            <strong class="font-monospace fs-6">{{ airport.iata_code or 'N/A' }}</strong>
+          </div>
+          <div class="d-flex justify-content-between py-1 small border-bottom">
+            <span class="text-muted">ICAO Code:</span>
+            <strong class="font-monospace fs-6">{{ airport.icao_code or 'N/A' }}</strong>
+          </div>
+          <div class="d-flex justify-content-between py-1 small border-bottom">
+            <span class="text-muted">Latitude:</span>
+            <strong class="font-monospace">{{ airport.latitude }}</strong>
+          </div>
+          <div class="d-flex justify-content-between py-1 small">
+            <span class="text-muted">Longitude:</span>
+            <strong class="font-monospace">{{ airport.longitude }}</strong>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-4">
+    <!-- Departures & Arrivals Tabs -->
+    <div class="col-lg-8">
+      <div class="aviation-card overflow-hidden">
+        <div class="aviation-card-header bg-white border-bottom p-0">
+          <ul class="nav nav-tabs border-0" id="flightTabs" role="tablist">
+            <li class="nav-item">
+              <button class="nav-link active fw-bold py-3 px-4 border-0" id="departures-tab" data-bs-toggle="tab" data-bs-target="#departures" type="button" role="tab">
+                <i class="bi bi-box-arrow-up-right text-primary me-2"></i>Scheduled Departures ({{ departures|length }})
+              </button>
+            </li>
+            <li class="nav-item">
+              <button class="nav-link fw-bold py-3 px-4 border-0" id="arrivals-tab" data-bs-toggle="tab" data-bs-target="#arrivals" type="button" role="tab">
+                <i class="bi bi-box-arrow-in-down-left text-success me-2"></i>Scheduled Arrivals ({{ arrivals|length }})
+              </button>
+            </li>
+          </ul>
+        </div>
+
+        <div class="tab-content" id="flightTabsContent">
+          <!-- Departures -->
+          <div class="tab-pane fade show active" id="departures" role="tabpanel">
+            {% if departures %}
+              <div class="table-responsive">
+                <table class="table aviation-table mb-0">
+                  <thead>
+                    <tr>
+                      <th>Flight</th>
+                      <th>Airline</th>
+                      <th>Destination</th>
+                      <th>Departure</th>
+                      <th>Status</th>
+                      <th class="text-end">Book</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for f in departures %}
+                      <tr>
+                        <td><strong class="text-navy">{{ f.flight_number }}</strong></td>
+                        <td>{{ f.airline.name }}</td>
+                        <td>{{ f.destination_airport.city }} ({{ f.destination_airport.iata_code or f.destination_airport.icao_code }})</td>
+                        <td>{{ f.scheduled_departure|datetime }}</td>
+                        <td><span class="badge bg-primary">{{ f.status }}</span></td>
+                        <td class="text-end">
+                          <a href="{{ url_for('seats.seat_selection', flight_id=f.id) }}" class="btn btn-sm btn-aviation-primary">
+                            Select Seats
+                          </a>
+                        </td>
+                      </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            {% else %}
+              <div class="p-4 text-center text-muted">
+                <i class="bi bi-calendar-x fs-2 d-block mb-2"></i>
+                No active departures currently scheduled for this airport.
+              </div>
+            {% endif %}
+          </div>
+
+          <!-- Arrivals -->
+          <div class="tab-pane fade" id="arrivals" role="tabpanel">
+            {% if arrivals %}
+              <div class="table-responsive">
+                <table class="table aviation-table mb-0">
+                  <thead>
+                    <tr>
+                      <th>Flight</th>
+                      <th>Airline</th>
+                      <th>Origin</th>
+                      <th>Arrival Time</th>
+                      <th>Status</th>
+                      <th class="text-end">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for f in arrivals %}
+                      <tr>
+                        <td><strong class="text-navy">{{ f.flight_number }}</strong></td>
+                        <td>{{ f.airline.name }}</td>
+                        <td>{{ f.origin_airport.city }} ({{ f.origin_airport.iata_code or f.origin_airport.icao_code }})</td>
+                        <td>{{ f.scheduled_arrival|datetime }}</td>
+                        <td><span class="badge bg-success">{{ f.status }}</span></td>
+                        <td class="text-end">
+                          <a href="{{ url_for('flights.details', flight_id=f.id) }}" class="btn btn-sm btn-outline-secondary">
+                            View Details
+                          </a>
+                        </td>
+                      </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            {% else %}
+              <div class="p-4 text-center text-muted">
+                <i class="bi bi-calendar-x fs-2 d-block mb-2"></i>
+                No active arrivals currently scheduled for this airport.
+              </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Nearby Airports Card -->
+    <div class="col-lg-4">
+      <div class="aviation-card p-3 mb-4">
+        <h6 class="fw-bold text-navy mb-3"><i class="bi bi-compass me-1"></i>Nearby Regional Airports</h6>
+        {% if nearby_airports %}
+          <div class="d-flex flex-column gap-2">
+            {% for nb, dist in nearby_airports %}
+              <div class="p-2 rounded bg-light border d-flex justify-content-between align-items-center">
+                <div>
+                  <div class="fw-bold small text-navy">{{ nb.city }} ({{ nb.iata_code or nb.icao_code }})</div>
+                  <small class="text-muted">{{ nb.name }}</small>
+                </div>
+                <div class="text-end">
+                  <span class="badge bg-secondary">{{ dist }} km</span>
+                  <div>
+                    <a href="{{ url_for('airports.airport_details', airport_id=nb.id) }}" class="small text-decoration-none">View</a>
+                  </div>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <p class="small text-muted mb-0">No nearby regional airports located within 450 km.</p>
+        {% endif %}
+      </div>
+
+      <!-- Quick Tips -->
+      <div class="aviation-card p-3 bg-light">
+        <h6 class="fw-bold text-navy mb-2 small text-uppercase"><i class="bi bi-lightbulb me-1"></i>Demonstration Context</h6>
+        <p class="small text-muted mb-0">
+          This airport profile reflects verified aeronautical identifiers and coordinates from civil aviation registries. Flight departures and arrivals represent reference timetable models.
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

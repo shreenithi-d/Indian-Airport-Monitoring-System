@@ -1,0 +1,202 @@
+{% extends 'base.html' %}
+
+{% block title %}Search Scheduled Flights - {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <!-- Search Form Header -->
+  <div class="aviation-card p-4 mb-4">
+    <div class="d-flex align-items-center gap-2 mb-3">
+      <i class="bi bi-airplane-engines-fill text-primary fs-4"></i>
+      <h4 class="fw-bold text-navy m-0">Flight Schedule &amp; Fare Search</h4>
+    </div>
+
+    {% if same_airport_error %}
+      <div class="alert alert-danger" role="alert">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+        Origin and Destination airports cannot be identical. Please choose distinct arrival and departure cities.
+      </div>
+    {% endif %}
+
+    <form method="GET" action="{{ url_for('flights.search') }}" id="flight-search-form">
+      <div class="row g-3 align-items-end">
+        <div class="col-md-3">
+          <label class="form-label small fw-bold text-muted">Origin Airport</label>
+          <div class="input-group">
+            <span class="input-group-text bg-light"><i class="bi bi-geo-alt text-primary"></i></span>
+            <select name="origin_id" id="search-origin" class="form-select">
+              <option value="">All Indian Origins</option>
+              {% for apt in airports %}
+                <option value="{{ apt.id }}" {% if selected_origin and selected_origin.id == apt.id %}selected{% endif %}>
+                  {{ apt.city }} ({{ apt.iata_code or apt.icao_code }})
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+
+        <div class="col-md-1 text-center d-none d-md-block">
+          <button type="button" class="btn btn-light rounded-circle shadow-sm border" id="swap-airports-btn" title="Swap">
+            <i class="bi bi-arrow-left-right text-primary"></i>
+          </button>
+        </div>
+
+        <div class="col-md-3">
+          <label class="form-label small fw-bold text-muted">Destination Airport</label>
+          <div class="input-group">
+            <span class="input-group-text bg-light"><i class="bi bi-pin-map text-danger"></i></span>
+            <select name="destination_id" id="search-dest" class="form-select">
+              <option value="">All Indian Destinations</option>
+              {% for apt in airports %}
+                <option value="{{ apt.id }}" {% if selected_dest and selected_dest.id == apt.id %}selected{% endif %}>
+                  {{ apt.city }} ({{ apt.iata_code or apt.icao_code }})
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+
+        <div class="col-md-2">
+          <label class="form-label small fw-bold text-muted">Travel Date</label>
+          <input type="date" name="travel_date" id="search-date" class="form-select" value="{{ travel_date }}">
+        </div>
+
+        <div class="col-md-1">
+          <label class="form-label small fw-bold text-muted">Passengers</label>
+          <select name="passengers" class="form-select">
+            {% for n in range(1, 5) %}
+              <option value="{{ n }}" {% if passengers_count == n %}selected{% endif %}>{{ n }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="col-md-2">
+          <button type="submit" class="btn btn-aviation-primary w-100 py-2">
+            <i class="bi bi-search me-1"></i>Find Flights
+          </button>
+        </div>
+      </div>
+
+      <!-- Secondary Filters -->
+      <div class="row g-2 mt-2 pt-2 border-top align-items-center">
+        <div class="col-auto">
+          <span class="small text-muted fw-bold">Refine Results:</span>
+        </div>
+        <div class="col-auto">
+          <select name="airline_id" class="form-select form-select-sm" onchange="this.form.submit()">
+            <option value="">All Airlines</option>
+            {% for al in airlines %}
+              <option value="{{ al.id }}" {% if selected_airline_id == al.id %}selected{% endif %}>{{ al.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-auto">
+          <select name="sort_by" class="form-select form-select-sm" onchange="this.form.submit()">
+            <option value="fare" {% if sort_by == 'fare' %}selected{% endif %}>Sort by Lowest Fare</option>
+            <option value="departure" {% if sort_by == 'departure' %}selected{% endif %}>Sort by Departure Time</option>
+            <option value="arrival" {% if sort_by == 'arrival' %}selected{% endif %}>Sort by Arrival Time</option>
+          </select>
+        </div>
+        <div class="col-auto ms-auto">
+          <a href="{{ url_for('flights.search') }}" class="btn btn-link btn-sm text-decoration-none text-muted">Clear Filters</a>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <!-- Search Results Count -->
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h5 class="fw-bold text-navy m-0">
+      Available Flights 
+      <span class="badge bg-secondary ms-1 fw-normal">{{ flights|length }} routes found</span>
+    </h5>
+    <small class="text-muted">Demonstration fares per passenger in INR</small>
+  </div>
+
+  <!-- Flight Cards List -->
+  {% if flights %}
+    <div class="d-flex flex-column gap-3">
+      {% for f in flights %}
+        <div class="aviation-card p-3 p-md-4">
+          <div class="row g-3 align-items-center">
+            <!-- Airline Info -->
+            <div class="col-md-3">
+              <div class="d-flex align-items-center gap-2">
+                <div class="p-2 rounded bg-light border text-center" style="width: 48px; height: 48px;">
+                  <i class="bi bi-airplane text-primary fs-4"></i>
+                </div>
+                <div>
+                  <h6 class="fw-bold text-navy mb-0">{{ f.airline.name }}</h6>
+                  <span class="badge bg-light text-dark border font-monospace">{{ f.flight_number }}</span>
+                  <small class="text-muted d-block" style="font-size: 0.72rem;">{{ f.aircraft.model }}</small>
+                </div>
+              </div>
+            </div>
+
+            <!-- Route & Times -->
+            <div class="col-md-5">
+              <div class="d-flex justify-content-between align-items-center text-center">
+                <div>
+                  <div class="fs-4 fw-bold text-navy">{{ f.scheduled_departure|time }}</div>
+                  <strong class="d-block text-primary">{{ f.origin_airport.city }}</strong>
+                  <span class="badge bg-dark">{{ f.origin_airport.iata_code or f.origin_airport.icao_code }}</span>
+                </div>
+
+                <div class="flex-grow-1 px-3">
+                  <small class="text-muted d-block mb-1">{{ f.duration_formatted }}</small>
+                  <div class="position-relative d-flex align-items-center justify-content-center">
+                    <div style="height: 2px; width: 100%; background: #CBD5E1;"></div>
+                    <i class="bi bi-airplane-engines-fill text-primary position-absolute bg-white px-1" style="transform: rotate(90deg); font-size: 0.9rem;"></i>
+                  </div>
+                  <small class="text-success fw-semibold" style="font-size: 0.72rem;">Non-Stop Direct</small>
+                </div>
+
+                <div>
+                  <div class="fs-4 fw-bold text-navy">{{ f.scheduled_arrival|time }}</div>
+                  <strong class="d-block text-primary">{{ f.destination_airport.city }}</strong>
+                  <span class="badge bg-dark">{{ f.destination_airport.iata_code or f.destination_airport.icao_code }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Fare & Seat Selection CTA -->
+            <div class="col-md-4 text-md-end border-start-md ps-md-4">
+              <div class="small text-muted mb-1">Starting from</div>
+              <div class="fs-3 fw-bold text-navy mb-1">{{ f.base_fare|currency }}</div>
+              
+              <div class="d-flex justify-content-md-end align-items-center gap-2 mb-2">
+                <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25">
+                  <i class="bi bi-check-circle me-1"></i>{{ f.available_seats_count }} seats left
+                </span>
+                <span class="badge bg-info bg-opacity-10 text-primary border border-primary border-opacity-25">
+                  {{ f.status }}
+                </span>
+              </div>
+
+              <div class="d-flex gap-2 justify-content-md-end">
+                <a href="{{ url_for('flights.details', flight_id=f.id) }}" class="btn btn-sm btn-outline-secondary">
+                  Details
+                </a>
+                <a href="{{ url_for('seats.seat_selection', flight_id=f.id, passengers=passengers_count) }}" class="btn btn-sm btn-aviation-primary px-3">
+                  <i class="bi bi-grid-3x3 me-1"></i>Select Seats
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="aviation-card p-5 text-center">
+      <img src="{{ url_for('static', filename='images/empty-state.svg') }}" alt="No Flights" width="130" class="mb-3">
+      <h4 class="fw-bold text-navy">No Scheduled Flights Found</h4>
+      <p class="text-muted small">No scheduled services match your current airport or date criteria.</p>
+      <a href="{{ url_for('flights.search') }}" class="btn btn-aviation-primary btn-sm">Reset Search Criteria</a>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{{ url_for('static', filename='js/flight-search.js') }}"></script>
+{% endblock %}

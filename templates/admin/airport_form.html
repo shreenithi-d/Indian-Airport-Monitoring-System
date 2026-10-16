@@ -1,0 +1,95 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if airport %}Edit Airport{% else %}Add Airport{% endif %} - Admin Console{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <div class="row justify-content-center">
+    <div class="col-lg-8">
+      <div class="aviation-card p-4">
+        <div class="d-flex justify-content-between align-items-center border-bottom pb-3 mb-4">
+          <h4 class="fw-bold text-navy m-0">
+            {% if airport %}Edit Airport: {{ airport.name }}{% else %}Add New Indian Airport{% endif %}
+          </h4>
+          <a href="{{ url_for('admin.airports') }}" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-arrow-left me-1"></i>Back to Airports
+          </a>
+        </div>
+
+        <form method="POST">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+          <div class="row g-3 mb-3">
+            <div class="col-md-8">
+              <label class="form-label small fw-bold text-muted">Airport Name <span class="text-danger">*</span></label>
+              <input type="text" name="name" class="form-control" value="{{ airport.name if airport else '' }}" required>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small fw-bold text-muted">City <span class="text-danger">*</span></label>
+              <input type="text" name="city" class="form-control" value="{{ airport.city if airport else '' }}" required>
+            </div>
+          </div>
+
+          <div class="row g-3 mb-3">
+            <div class="col-md-4">
+              <label class="form-label small fw-bold text-muted">State / UT <span class="text-danger">*</span></label>
+              <input type="text" name="state" class="form-control" value="{{ airport.state if airport else '' }}" required>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small fw-bold text-muted">IATA Code (3 Letters)</label>
+              <input type="text" name="iata_code" class="form-control font-monospace" maxlength="3" value="{{ airport.iata_code if airport and airport.iata_code else '' }}">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small fw-bold text-muted">ICAO Code (4 Letters)</label>
+              <input type="text" name="icao_code" class="form-control font-monospace" maxlength="4" value="{{ airport.icao_code if airport and airport.icao_code else '' }}">
+            </div>
+          </div>
+
+          <div class="row g-3 mb-3">
+            <div class="col-md-6">
+              <label class="form-label small fw-bold text-muted">Latitude <span class="text-danger">*</span></label>
+              <input type="number" step="any" name="latitude" class="form-control" value="{{ airport.latitude if airport else '' }}" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-bold text-muted">Longitude <span class="text-danger">*</span></label>
+              <input type="number" step="any" name="longitude" class="form-control" value="{{ airport.longitude if airport else '' }}" required>
+            </div>
+          </div>
+
+          <div class="row g-3 mb-3">
+            <div class="col-md-4">
+              <label class="form-label small fw-bold text-muted">Category</label>
+              <select name="category" class="form-select">
+                <option value="International" {% if airport and airport.category == 'International' %}selected{% endif %}>International</option>
+                <option value="Domestic" {% if not airport or airport.category == 'Domestic' %}selected{% endif %}>Domestic</option>
+                <option value="Customs" {% if airport and airport.category == 'Customs' %}selected{% endif %}>Customs</option>
+              </select>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small fw-bold text-muted">Operational Status</label>
+              <select name="operational_status" class="form-select">
+                <option value="Operational" {% if not airport or airport.operational_status == 'Operational' %}selected{% endif %}>Operational</option>
+                <option value="Non-Operational" {% if airport and airport.operational_status == 'Non-Operational' %}selected{% endif %}>Non-Operational</option>
+                <option value="Under Development" {% if airport and airport.operational_status == 'Under Development' %}selected{% endif %}>Under Development</option>
+              </select>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small fw-bold text-muted">Terminals</label>
+              <input type="text" name="terminals" class="form-control" value="{{ airport.terminals if airport else 'T1' }}">
+            </div>
+          </div>
+
+          <div class="mb-4">
+            <label class="form-label small fw-bold text-muted">Description / Operational Notes</label>
+            <textarea name="description" class="form-control" rows="3">{{ airport.description if airport else '' }}</textarea>
+          </div>
+
+          <button type="submit" class="btn btn-aviation-primary px-4 py-2">
+            <i class="bi bi-save me-1"></i>Save Airport Record
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

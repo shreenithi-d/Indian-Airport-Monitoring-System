@@ -1,0 +1,135 @@
+/* Dashboard Layout Styles */
+.dashboard-wrapper {
+  display: flex;
+  min-height: calc(100vh - 60px);
+}
+
+.dashboard-sidebar {
+  width: 260px;
+  background: #0B1739;
+  color: #CBD5E1;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  transition: all 0.3s ease;
+}
+
+.sidebar-header {
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.sidebar-menu {
+  list-style: none;
+  padding: 1rem 0.75rem;
+  margin: 0;
+  flex-grow: 1;
+}
+
+.sidebar-item {
+  margin-bottom: 0.35rem;
+}
+
+.sidebar-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0.65rem 0.95rem;
+  color: #94A3B8;
+  text-decoration: none;
+  border-radius: 8px;
+  font-size: 0.92rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.sidebar-link:hover {
+  color: #FFFFFF;
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.sidebar-link.active {
+  color: #FFFFFF;
+  background: var(--secondary-blue);
+  box-shadow: 0 2px 8px rgba(23, 105, 255, 0.35);
+}
+
+.sidebar-link i {
+  font-size: 1.15rem;
+}
+
+.sidebar-section-title {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  color: #64748B;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  padding: 1rem 1rem 0.4rem 1rem;
+}
+
+.dashboard-main {
+  flex-grow: 1;
+  background: #F4F7FC;
+  padding: 1.75rem 2rem;
+  overflow-y: auto;
+}
+
+/* User avatar pill */
+.user-avatar-pill {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--secondary-blue), var(--cyan-accent));
+  color: #FFFFFF;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+/* Metric cards */
+.metric-card {
+  background: #FFFFFF;
+  border-radius: 12px;
+  padding: 1.25rem;
+  border: 1px solid #E2E8F0;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+}
+
+.metric-card-accent-blue {
+  border-left: 4px solid var(--secondary-blue);
+}
+
+.metric-card-accent-cyan {
+  border-left: 4px solid var(--cyan-accent);
+}
+
+.metric-card-accent-green {
+  border-left: 4px solid var(--success-green);
+}
+
+.metric-card-accent-amber {
+  border-left: 4px solid var(--warning-amber);
+}
+
+.metric-title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--secondary-text);
+  margin-bottom: 0.5rem;
+}
+
+.metric-val {
+  font-size: 1.85rem;
+  font-weight: 800;
+  color: var(--primary-navy);
+  margin: 0;
+}

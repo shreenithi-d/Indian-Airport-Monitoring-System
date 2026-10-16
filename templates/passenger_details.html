@@ -1,0 +1,136 @@
+{% extends 'base.html' %}
+
+{% block title %}Enter Passenger Details - {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <!-- Breadcrumb -->
+  <nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb small">
+      <li class="breadcrumb-item"><a href="{{ url_for('main.landing') }}">Home</a></li>
+      <li class="breadcrumb-item"><a href="{{ url_for('flights.search') }}">Flights</a></li>
+      <li class="breadcrumb-item"><a href="{{ url_for('seats.seat_selection', flight_id=flight.id, passengers=seats|length) }}">Seat Selection</a></li>
+      <li class="breadcrumb-item active" aria-current="page">Passenger Details</li>
+    </ol>
+  </nav>
+
+  <!-- Flight Header -->
+  <div class="aviation-card p-3 mb-4 bg-white">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center">
+      <div>
+        <span class="badge bg-dark font-monospace">{{ flight.flight_number }}</span>
+        <span class="badge bg-primary">{{ flight.airline.name }}</span>
+        <h5 class="fw-bold text-navy mb-0 mt-1">
+          {{ flight.origin_airport.city }} <i class="bi bi-arrow-right text-primary mx-1"></i> {{ flight.destination_airport.city }}
+        </h5>
+        <small class="text-muted">{{ flight.scheduled_departure|datetime }} &bull; {{ flight.aircraft.model }}</small>
+      </div>
+
+      <div class="mt-2 mt-md-0">
+        <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-3 py-2">
+          <i class="bi bi-check-circle me-1"></i>{{ seats|length }} Seat(s) Selected: 
+          {% for s in seats %}<strong>{{ s.seat_code }}</strong>{% if not loop.last %}, {% endif %}{% endfor %}
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Educational Alert regarding Gender Colors -->
+  <div class="alert alert-info border-info d-flex align-items-center gap-2 mb-4" role="alert">
+    <i class="bi bi-palette-fill fs-4 text-info"></i>
+    <div class="small">
+      <strong>Cabin Visualization Note:</strong> Passenger gender selection will determine the visual display on the interactive seat map:
+      <span class="badge" style="background: #DCEBFF; color: #2166C2; border: 1px solid #4385E8;">Male &rarr; Light Blue (#DCEBFF)</span>
+      <span class="badge" style="background: #FFE0EC; color: #C43D75; border: 1px solid #E66B9A;">Female &rarr; Light Pink (#FFE0EC)</span>
+      <span class="badge bg-secondary">Prefer not to say &rarr; Neutral Gray</span>.
+      This color coding is an informational indicator.
+    </div>
+  </div>
+
+  <!-- Passenger Input Forms -->
+  <form method="POST" action="{{ url_for('bookings.enter_passengers') }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <input type="hidden" name="action" value="proceed_to_review">
+    <input type="hidden" name="flight_id" value="{{ flight.id }}">
+    <input type="hidden" name="seat_ids" value="{{ seat_ids_raw }}">
+
+    <div class="row g-4">
+      <div class="col-lg-8">
+        {% for s in seats %}
+          <div class="aviation-card p-4 mb-3">
+            <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-3">
+              <h6 class="fw-bold text-navy m-0">
+                <i class="bi bi-person-fill text-primary me-1"></i>Passenger {{ loop.index }}
+              </h6>
+              <span class="badge bg-primary px-3 py-1">Assigned Seat: {{ s.seat_code }} ({{ s.cabin_class }} - {{ s.seat_type }})</span>
+            </div>
+
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label small fw-bold text-muted">Full Name <span class="text-danger">*</span></label>
+                <input type="text" name="name_{{ s.id }}" class="form-control" placeholder="e.g. Rahul Verma" required>
+              </div>
+
+              <div class="col-md-3">
+                <label class="form-label small fw-bold text-muted">Gender Selection <span class="text-danger">*</span></label>
+                <select name="gender_{{ s.id }}" class="form-select" required>
+                  <option value="Male" selected>Male (Blue)</option>
+                  <option value="Female">Female (Pink)</option>
+                  <option value="Prefer not to say">Prefer not to say</option>
+                </select>
+              </div>
+
+              <div class="col-md-3">
+                <label class="form-label small fw-bold text-muted">Age <span class="text-danger">*</span></label>
+                <input type="number" name="age_{{ s.id }}" class="form-control" value="28" min="1" max="120" required>
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+
+        <div class="d-flex justify-content-between align-items-center mt-4">
+          <a href="{{ url_for('seats.seat_selection', flight_id=flight.id, passengers=seats|length) }}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i>Back to Seat Map
+          </a>
+          <button type="submit" class="btn btn-aviation-primary px-4 py-2">
+            Proceed to Review Booking <i class="bi bi-arrow-right ms-1"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Right Side Fare Summary -->
+      <div class="col-lg-4">
+        <div class="aviation-card p-4">
+          <h6 class="fw-bold text-navy mb-3"><i class="bi bi-receipt me-1 text-primary"></i>Booking Summary</h6>
+
+          <div class="d-flex justify-content-between py-2 border-bottom small">
+            <span class="text-muted">Total Passengers:</span>
+            <strong>{{ seats|length }}</strong>
+          </div>
+
+          <div class="d-flex justify-content-between py-2 border-bottom small">
+            <span class="text-muted">Base Fare per Pax:</span>
+            <strong>{{ flight.base_fare|currency }}</strong>
+          </div>
+
+          <div class="d-flex justify-content-between py-2 border-bottom small">
+            <span class="text-muted">Seat Selection Surcharges:</span>
+            <strong>
+              {% set total_seat_charge = 0 %}
+              {% for s in seats %}
+                {% set total_seat_charge = total_seat_charge + s.additional_charge %}
+              {% endfor %}
+              {{ total_seat_charge|currency }}
+            </strong>
+          </div>
+
+          <div class="p-3 bg-light rounded mt-3 small text-muted">
+            <i class="bi bi-shield-lock-fill text-success me-1"></i>
+            Aviation taxes (5% GST) and Airport Development Fees (UDF ₹250) will be added to the final review invoice.
+          </div>
+        </div>
+      </div>
+    </div>
+  </form>
+</div>
+{% endblock %}

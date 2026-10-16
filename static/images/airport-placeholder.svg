@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
+  <rect width="120" height="120" rx="16" fill="#F8FAFC" stroke="#E2E8F0" stroke-width="2"/>
+  <path d="M50 20 H70 V40 H50 Z" fill="#CBD5E1"/>
+  <path d="M45 40 H75 L80 100 H40 Z" fill="#94A3B8"/>
+  <rect x="56" y="24" width="8" height="12" rx="2" fill="#39A0FF"/>
+  <!-- Radar Dish -->
+  <path d="M52 14 A 10 10 0 0 1 68 14" stroke="#1769FF" stroke-width="3" fill="none" stroke-linecap="round"/>
+  <line x1="60" y1="14" x2="60" y2="20" stroke="#1769FF" stroke-width="2"/>
+  <!-- Runway lines -->
+  <line x1="20" y1="100" x2="100" y2="100" stroke="#64748B" stroke-width="4"/>
+  <line x1="30" y1="108" x2="90" y2="108" stroke="#F5A623" stroke-width="2" stroke-dasharray="6,4"/>
+</svg>

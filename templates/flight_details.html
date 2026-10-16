@@ -1,0 +1,161 @@
+{% extends 'base.html' %}
+
+{% block title %}Flight {{ flight.flight_number }} ({{ flight.origin_airport.city }} to {{ flight.destination_airport.city }}) - Details{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <!-- Breadcrumb -->
+  <nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb small">
+      <li class="breadcrumb-item"><a href="{{ url_for('main.landing') }}">Home</a></li>
+      <li class="breadcrumb-item"><a href="{{ url_for('flights.search') }}">Flights</a></li>
+      <li class="breadcrumb-item active" aria-current="page">{{ flight.flight_number }}</li>
+    </ol>
+  </nav>
+
+  <!-- Flight Summary Card -->
+  <div class="aviation-card p-4 mb-4">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center border-bottom pb-3 mb-3">
+      <div class="d-flex align-items-center gap-3">
+        <div class="p-3 bg-light rounded-3 border text-center">
+          <i class="bi bi-airplane-fill text-primary fs-2"></i>
+        </div>
+        <div>
+          <div class="d-flex align-items-center gap-2 mb-1">
+            <span class="badge bg-dark font-monospace fs-6">{{ flight.flight_number }}</span>
+            <span class="badge bg-primary">{{ flight.airline.name }}</span>
+            <span class="badge bg-success">{{ flight.status }}</span>
+          </div>
+          <h4 class="fw-bold text-navy mb-0">
+            {{ flight.origin_airport.city }} ({{ flight.origin_airport.iata_code or flight.origin_airport.icao_code }}) 
+            <i class="bi bi-arrow-right mx-1 text-primary"></i> 
+            {{ flight.destination_airport.city }} ({{ flight.destination_airport.iata_code or flight.destination_airport.icao_code }})
+          </h4>
+        </div>
+      </div>
+
+      <div class="text-md-end mt-3 mt-md-0">
+        <div class="small text-muted">Demonstration Fare</div>
+        <div class="fs-3 fw-bold text-navy">{{ flight.base_fare|currency }}</div>
+        <a href="{{ url_for('seats.seat_selection', flight_id=flight.id, passengers=passengers_count) }}" class="btn btn-aviation-primary btn-sm px-4 mt-1">
+          <i class="bi bi-grid-3x3 me-1"></i>Select Seats &amp; Book
+        </a>
+      </div>
+    </div>
+
+    <!-- Times & Gate Specs -->
+    <div class="row g-3 text-center">
+      <div class="col-6 col-md-3">
+        <div class="p-3 bg-light rounded-3 border">
+          <small class="text-muted d-block text-uppercase">Departure</small>
+          <strong class="fs-5 text-navy d-block">{{ flight.scheduled_departure|time }}</strong>
+          <small class="text-muted">{{ flight.scheduled_departure|date }}</small>
+          <div class="small mt-1 text-primary">Terminal: <strong>{{ flight.terminal or 'T1' }}</strong></div>
+        </div>
+      </div>
+
+      <div class="col-6 col-md-3">
+        <div class="p-3 bg-light rounded-3 border">
+          <small class="text-muted d-block text-uppercase">Arrival</small>
+          <strong class="fs-5 text-navy d-block">{{ flight.scheduled_arrival|time }}</strong>
+          <small class="text-muted">{{ flight.scheduled_arrival|date }}</small>
+          <div class="small mt-1 text-primary">Gate: <strong>{{ flight.gate or 'G1' }}</strong></div>
+        </div>
+      </div>
+
+      <div class="col-6 col-md-3">
+        <div class="p-3 bg-light rounded-3 border">
+          <small class="text-muted d-block text-uppercase">Flight Duration</small>
+          <strong class="fs-5 text-navy d-block">{{ flight.duration_formatted }}</strong>
+          <small class="text-success fw-semibold">Non-Stop Scheduled</small>
+          <div class="small mt-1 text-muted">Distance: <strong>{{ route_info.distance_km }} km</strong></div>
+        </div>
+      </div>
+
+      <div class="col-6 col-md-3">
+        <div class="p-3 bg-light rounded-3 border">
+          <small class="text-muted d-block text-uppercase">Aircraft Model</small>
+          <strong class="fs-5 text-navy d-block">{{ flight.aircraft.model }}</strong>
+          <small class="text-muted">Reg: {{ flight.aircraft.registration }}</small>
+          <div class="small mt-1 text-success">Capacity: <strong>{{ flight.aircraft.seat_capacity }} seats</strong></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Route Map & Status Timeline -->
+  <div class="row g-4">
+    <!-- Scheduled Route on Leaflet Map -->
+    <div class="col-lg-7">
+      <div class="aviation-card p-3 h-100">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <h6 class="fw-bold text-navy m-0"><i class="bi bi-geo-alt-fill text-primary me-1"></i>Scheduled Corridor Route</h6>
+          <span class="badge bg-light text-dark border">Illustrative Geodesic Route</span>
+        </div>
+        <div id="flight-route-map" style="height: 380px; border-radius: 8px; border: 1px solid #CBD5E1;"></div>
+      </div>
+    </div>
+
+    <!-- Status Milestones Timeline -->
+    <div class="col-lg-5">
+      <div class="aviation-card p-4 h-100">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h6 class="fw-bold text-navy m-0"><i class="bi bi-clock-history text-primary me-1"></i>Flight Status Milestones</h6>
+          <a href="{{ url_for('flights.track_flight', flight_id=flight.id) }}" class="small text-decoration-none">Full Tracker</a>
+        </div>
+
+        <div class="timeline-container ps-3 border-start">
+          {% for m in timeline %}
+            <div class="position-relative mb-4 ps-3">
+              <span class="position-absolute top-0 start-0 translate-middle p-1 rounded-circle border border-white 
+                {% if m.state == 'completed' %}bg-success
+                {% elif m.state == 'active' %}bg-primary animate-pulse
+                {% elif m.state == 'delayed' %}bg-warning
+                {% elif m.state == 'cancelled' %}bg-danger
+                {% else %}bg-secondary opacity-50{% endif %}" 
+                style="width: 14px; height: 14px;">
+              </span>
+              <div class="fw-bold text-navy small">{{ m.label }}</div>
+              <small class="text-muted">{{ m.desc }}</small>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const routeMap = L.map('flight-route-map', {
+      center: [20.5937, 78.9629],
+      zoom: 5
+    });
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 18,
+      attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(routeMap);
+
+    const origLat = {{ flight.origin_airport.latitude }};
+    const origLng = {{ flight.origin_airport.longitude }};
+    const destLat = {{ flight.destination_airport.latitude }};
+    const destLng = {{ flight.destination_airport.longitude }};
+
+    // Markers
+    L.marker([origLat, origLng]).addTo(routeMap).bindPopup("<strong>Origin:</strong> {{ flight.origin_airport.name }}");
+    L.marker([destLat, destLng]).addTo(routeMap).bindPopup("<strong>Destination:</strong> {{ flight.destination_airport.name }}");
+
+    // Flight route line
+    const line = L.polyline([[origLat, origLng], [destLat, destLng]], {
+      color: '#1769FF',
+      weight: 3,
+      dashArray: '6, 6'
+    }).addTo(routeMap);
+
+    routeMap.fitBounds(line.getBounds(), { padding: [40, 40] });
+  });
+</script>
+{% endblock %}

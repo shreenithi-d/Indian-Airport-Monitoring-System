@@ -1,0 +1,11 @@
+name,city,state,iata_code,icao_code,latitude,longitude,category,operational_status,terminals,description
+Indira Gandhi International Airport,New Delhi,Delhi,DEL,VIDP,28.5562,77.1000,International,Operational,"T1, T2, T3",Primary international aviation hub serving the National Capital Region.
+Chhatrapati Shivaji Maharaj International Airport,Mumbai,Maharashtra,BOM,VABB,19.0896,72.8656,International,Operational,"T1, T2",Major international gateway situated in the financial capital of India.
+Kempegowda International Airport,Bengaluru,Karnataka,BLR,VOBL,13.1986,77.7066,International,Operational,"T1, T2",World-class greenfield airport serving Karnataka's tech capital.
+Rajiv Gandhi International Airport,Hyderabad,Telangana,HYD,VOHS,17.2403,78.4294,International,Operational,Main Terminal,Major transfer hub in southern India operated by GMR.
+Chennai International Airport,Chennai,Tamil Nadu,MAA,VOMM,12.9941,80.1709,International,Operational,"T1, T2, T4",Premier international gateway serving Tamil Nadu.
+Netaji Subhash Chandra Bose International Airport,Kolkata,West Bengal,CCU,VECC,22.6547,88.4467,International,Operational,Integrated Terminal,Historical aviation landmark and principal hub for Eastern India.
+Cochin International Airport,Kochi,Kerala,COK,VOCI,10.1556,76.3900,International,Operational,"T1, T2, T3",World's first solar-powered airport and Kerala's busiest hub.
+Sardar Vallabhbhai Patel International Airport,Ahmedabad,Gujarat,AMD,VAAH,23.0772,72.6347,International,Operational,"T1, T2",Primary international airport serving Ahmedabad and Gandhinagar.
+Jaipur International Airport,Jaipur,Rajasthan,JAI,VIJP,26.8242,75.8122,International,Operational,"T1, T2",Rajasthan's primary international airport showcasing local architecture.
+Chaudhary Charan Singh International Airport,Lucknow,Uttar Pradesh,LKO,VILK,26.7606,80.8893,International,Operational,"T1, T2, T3",Principal airport for central and eastern Uttar Pradesh at Amausi.

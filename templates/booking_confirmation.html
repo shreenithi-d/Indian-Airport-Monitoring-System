@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+
+{% block title %}Booking Confirmed - {{ booking.booking_reference }} | {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-lg-8">
+      <!-- Success Card -->
+      <div class="aviation-card p-4 p-md-5 text-center mb-4">
+        <div class="stat-icon-wrapper bg-success bg-opacity-10 text-success mx-auto mb-3" style="width: 70px; height: 70px;">
+          <i class="bi bi-check-circle-fill fs-1"></i>
+        </div>
+
+        <h3 class="fw-bold text-navy mb-1">Demonstration Booking Confirmed!</h3>
+        <p class="text-muted small mb-4">Your journey has been scheduled and your seats have been reserved in the aviation database.</p>
+
+        <div class="p-3 bg-light rounded-3 border d-inline-block px-4 mb-4">
+          <small class="text-muted d-block text-uppercase fw-bold" style="font-size: 0.72rem;">Booking Reference Number (PNR)</small>
+          <strong class="font-monospace fs-3 text-primary">{{ booking.booking_reference }}</strong>
+        </div>
+
+        <!-- Summary Details -->
+        <div class="aviation-card p-3 bg-light text-start border mb-4">
+          <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-2">
+            <div>
+              <span class="badge bg-primary me-1">{{ booking.flight.airline.name }}</span>
+              <strong class="font-monospace">{{ booking.flight.flight_number }}</strong>
+            </div>
+            <span class="badge bg-success">Status: {{ booking.booking_status }}</span>
+          </div>
+
+          <div class="row g-2 small">
+            <div class="col-6">
+              <span class="text-muted">Route:</span>
+              <strong>{{ booking.flight.origin_airport.city }} &rarr; {{ booking.flight.destination_airport.city }}</strong>
+            </div>
+            <div class="col-6 text-end">
+              <span class="text-muted">Departure:</span>
+              <strong>{{ booking.flight.scheduled_departure|datetime }}</strong>
+            </div>
+            <div class="col-6">
+              <span class="text-muted">Passengers ({{ booking.passenger_count }}):</span>
+              {% for p in booking.passengers %}
+                <span class="badge bg-secondary me-1">{{ p.full_name }} ({{ p.seat_number }})</span>
+              {% endfor %}
+            </div>
+            <div class="col-6 text-end">
+              <span class="text-muted">Total Paid:</span>
+              <strong class="text-navy fs-6">{{ booking.total_amount|currency }}</strong>
+            </div>
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="d-flex flex-wrap justify-content-center gap-3">
+          <a href="{{ url_for('bookings.ticket_view', booking_id=booking.id) }}" class="btn btn-aviation-primary px-4 py-2">
+            <i class="bi bi-qr-code-scan me-1"></i>View Boarding Pass / Ticket
+          </a>
+          <a href="{{ url_for('bookings.my_bookings') }}" class="btn btn-outline-secondary px-4 py-2">
+            <i class="bi bi-ticket-perforated me-1"></i>My Bookings
+          </a>
+          <a href="{{ url_for('airports.map_view') }}" class="btn btn-outline-primary px-4 py-2">
+            <i class="bi bi-map me-1"></i>Airport Map
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

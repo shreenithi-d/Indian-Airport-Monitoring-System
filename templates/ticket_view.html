@@ -1,0 +1,155 @@
+{% extends 'base.html' %}
+
+{% block title %}Boarding Pass - {{ booking.booking_reference }} | {{ app_name }}{% endblock %}
+
+{% block extra_head %}
+<style>
+  @media print {
+    nav, footer, .no-print { display: none !important; }
+    body { background: #fff !important; }
+    .boarding-pass-card { box-shadow: none !important; border: 1px solid #000 !important; }
+  }
+  .boarding-pass-card {
+    background: #FFFFFF;
+    border-radius: 16px;
+    border: 1px solid #CBD5E1;
+    overflow: hidden;
+    box-shadow: 0 8px 24px rgba(11, 23, 57, 0.08);
+  }
+  .pass-header {
+    background: linear-gradient(135deg, #0B1739, #1769FF);
+    color: #FFFFFF;
+    padding: 1.25rem 1.5rem;
+  }
+  .pass-stub {
+    border-left: 2px dashed #CBD5E1;
+    background: #F8FAFC;
+    position: relative;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <!-- Controls -->
+  <div class="d-flex justify-content-between align-items-center mb-4 no-print">
+    <div>
+      <h4 class="fw-bold text-navy m-0">Boarding Pass &amp; Demonstration Ticket</h4>
+      <p class="text-muted small m-0">Booking Reference: <strong>{{ booking.booking_reference }}</strong></p>
+    </div>
+    <div class="d-flex gap-2">
+      <button onclick="window.print()" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-printer me-1"></i>Print Ticket
+      </button>
+      <a href="{{ url_for('bookings.my_bookings') }}" class="btn btn-aviation-primary btn-sm">
+        <i class="bi bi-ticket-perforated me-1"></i>My Bookings
+      </a>
+    </div>
+  </div>
+
+  <!-- Boarding Pass for Each Passenger -->
+  {% for pax in booking.passengers %}
+    <div class="boarding-pass-card mb-4">
+      <div class="row g-0">
+        <!-- Main Pass Section -->
+        <div class="col-md-8">
+          <div class="pass-header d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center gap-2">
+              <img src="{{ url_for('static', filename='images/logo.svg') }}" alt="Logo" width="28" height="28">
+              <span class="fw-bold fs-6">{{ booking.flight.airline.name }}</span>
+            </div>
+            <div>
+              <span class="badge bg-warning text-dark font-monospace">DEMO BOARDING PASS</span>
+            </div>
+          </div>
+
+          <div class="p-4">
+            <!-- Route -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+              <div>
+                <div class="fs-2 fw-bold text-navy">{{ booking.flight.origin_airport.city }}</div>
+                <div class="badge bg-dark fs-5">{{ booking.flight.origin_airport.iata_code or booking.flight.origin_airport.icao_code }}</div>
+                <small class="text-muted d-block mt-1">{{ booking.flight.origin_airport.name }}</small>
+              </div>
+
+              <div class="text-center px-3">
+                <i class="bi bi-airplane-engines-fill text-primary fs-3" style="transform: rotate(90deg); display: inline-block;"></i>
+                <small class="text-muted d-block">{{ booking.flight.duration_formatted }}</small>
+              </div>
+
+              <div class="text-end">
+                <div class="fs-2 fw-bold text-navy">{{ booking.flight.destination_airport.city }}</div>
+                <div class="badge bg-dark fs-5">{{ booking.flight.destination_airport.iata_code or booking.flight.destination_airport.icao_code }}</div>
+                <small class="text-muted d-block mt-1">{{ booking.flight.destination_airport.name }}</small>
+              </div>
+            </div>
+
+            <!-- Details Grid -->
+            <div class="row g-3 text-center border-top pt-3">
+              <div class="col-3">
+                <small class="text-muted text-uppercase d-block" style="font-size: 0.72rem;">Passenger</small>
+                <strong class="text-navy text-truncate d-block">{{ pax.full_name }}</strong>
+              </div>
+              <div class="col-3">
+                <small class="text-muted text-uppercase d-block" style="font-size: 0.72rem;">Flight No</small>
+                <strong class="text-navy font-monospace">{{ booking.flight.flight_number }}</strong>
+              </div>
+              <div class="col-3">
+                <small class="text-muted text-uppercase d-block" style="font-size: 0.72rem;">Departure</small>
+                <strong class="text-navy">{{ booking.flight.scheduled_departure|datetime }}</strong>
+              </div>
+              <div class="col-3">
+                <small class="text-muted text-uppercase d-block" style="font-size: 0.72rem;">Class</small>
+                <strong class="text-primary">{{ pax.cabin_class }}</strong>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Stub Section with Barcode/QR -->
+        <div class="col-md-4 pass-stub p-4 d-flex flex-column justify-content-between text-center">
+          <div>
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <span class="badge bg-secondary font-monospace">{{ booking.flight.flight_number }}</span>
+              <strong class="small text-muted">{{ booking.booking_reference }}</strong>
+            </div>
+
+            <div class="row g-2 mb-3">
+              <div class="col-4">
+                <div class="p-2 bg-white rounded border">
+                  <small class="text-muted d-block" style="font-size: 0.65rem;">GATE</small>
+                  <strong class="fs-5 text-navy">{{ booking.flight.gate or 'G4' }}</strong>
+                </div>
+              </div>
+              <div class="col-4">
+                <div class="p-2 bg-white rounded border">
+                  <small class="text-muted d-block" style="font-size: 0.65rem;">TERMINAL</small>
+                  <strong class="fs-5 text-navy">{{ booking.flight.terminal or 'T1' }}</strong>
+                </div>
+              </div>
+              <div class="col-4">
+                <div class="p-2 bg-white rounded border border-primary">
+                  <small class="text-primary d-block fw-bold" style="font-size: 0.65rem;">SEAT</small>
+                  <strong class="fs-4 text-primary">{{ pax.seat_number }}</strong>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Simulated QR Code Graphic -->
+          <div class="my-2">
+            <div class="p-2 bg-white rounded border d-inline-block shadow-sm">
+              <i class="bi bi-qr-code text-navy" style="font-size: 4rem;"></i>
+            </div>
+            <small class="text-muted d-block mt-1" style="font-size: 0.68rem;">Security Token: {{ booking.booking_reference }}-{{ pax.seat_number }}</small>
+          </div>
+
+          <div class="small text-muted" style="font-size: 0.7rem;">
+            Academic Software Demonstration &bull; Not Valid For Actual Commercial Flight Boarding
+          </div>
+        </div>
+      </div>
+    </div>
+  {% endfor %}
+</div>
+{% endblock %}

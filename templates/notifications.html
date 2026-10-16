@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+
+{% block title %}Notifications - {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h4 class="fw-bold text-navy m-0">In-App Notifications &amp; Alerts</h4>
+      <p class="text-muted small m-0">Important updates on bookings, delays, and flight milestones</p>
+    </div>
+    {% if notifications %}
+      <form method="POST" action="{{ url_for('main.mark_all_notifications') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit" class="btn btn-outline-secondary btn-sm">
+          <i class="bi bi-check2-all me-1"></i>Mark All Read
+        </button>
+      </form>
+    {% endif %}
+  </div>
+
+  <div class="aviation-card overflow-hidden">
+    {% if notifications %}
+      <div class="list-group list-group-flush">
+        {% for n in notifications %}
+          <div class="list-group-item p-3 d-flex align-items-start gap-3 {% if not n.is_read %}bg-light{% endif %}">
+            <div class="p-2 rounded bg-primary bg-opacity-10 text-primary">
+              <i class="bi 
+                {% if n.notification_type == 'booking' %}bi-ticket-perforated-fill
+                {% elif n.notification_type == 'flight_status' %}bi-airplane-fill
+                {% else %}bi-bell-fill{% endif %} fs-4">
+              </i>
+            </div>
+            <div class="flex-grow-1">
+              <div class="d-flex justify-content-between align-items-baseline">
+                <h6 class="fw-bold text-navy mb-1">{{ n.title }}</h6>
+                <small class="text-muted" style="font-size: 0.72rem;">{{ n.created_at|datetime }}</small>
+              </div>
+              <p class="text-secondary small mb-0">{{ n.message }}</p>
+            </div>
+            {% if not n.is_read %}
+              <span class="badge bg-primary rounded-pill">New</span>
+            {% endif %}
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="p-5 text-center text-muted">
+        <i class="bi bi-bell-slash fs-1 d-block mb-2"></i>
+        No notifications to display.
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

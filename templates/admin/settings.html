@@ -1,0 +1,104 @@
+{% extends 'base.html' %}
+
+{% block title %}System Settings - Admin Console{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper">
+  <!-- Admin Sidebar -->
+  <aside class="dashboard-sidebar">
+    <div class="sidebar-header">
+      <span class="fw-bold text-white small text-uppercase letter-spacing-1">
+        <i class="bi bi-shield-lock-fill text-warning me-2"></i>Admin Console
+      </span>
+    </div>
+    <ul class="sidebar-menu">
+      <li class="sidebar-item"><a href="{{ url_for('admin.dashboard') }}" class="sidebar-link"><i class="bi bi-speedometer2"></i>Overview</a></li>
+      <li class="sidebar-section-title">Aviation Management</li>
+      <li class="sidebar-item"><a href="{{ url_for('admin.airports') }}" class="sidebar-link"><i class="bi bi-building"></i>Airports</a></li>
+      <li class="sidebar-item"><a href="{{ url_for('admin.flights') }}" class="sidebar-link"><i class="bi bi-airplane"></i>Flights &amp; Schedules</a></li>
+      <li class="sidebar-item"><a href="{{ url_for('admin.fleet') }}" class="sidebar-link"><i class="bi bi-grid-3x3"></i>Fleet &amp; Seats</a></li>
+      <li class="sidebar-section-title">Passenger Operations</li>
+      <li class="sidebar-item"><a href="{{ url_for('admin.bookings') }}" class="sidebar-link"><i class="bi bi-ticket-perforated"></i>Bookings</a></li>
+      <li class="sidebar-item"><a href="{{ url_for('admin.users') }}" class="sidebar-link"><i class="bi bi-people"></i>Passengers</a></li>
+      <li class="sidebar-section-title">Monitoring &amp; Audit</li>
+      <li class="sidebar-item"><a href="{{ url_for('admin.analytics') }}" class="sidebar-link"><i class="bi bi-bar-chart-line"></i>Analytics</a></li>
+      <li class="sidebar-item"><a href="{{ url_for('admin.audit_logs') }}" class="sidebar-link"><i class="bi bi-journal-text"></i>Audit Logs</a></li>
+      <li class="sidebar-item"><a href="{{ url_for('admin.settings') }}" class="sidebar-link active"><i class="bi bi-gear"></i>Settings</a></li>
+    </ul>
+  </aside>
+
+  <!-- Content -->
+  <div class="dashboard-main">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <div>
+        <h4 class="fw-bold text-navy m-0">Aviation System Configuration</h4>
+        <p class="text-muted small m-0">Operational environment variables, demonstration parameters, and database controls</p>
+      </div>
+    </div>
+
+    <div class="row g-4">
+      <div class="col-lg-8">
+        <div class="aviation-card p-4 mb-4">
+          <h6 class="fw-bold text-navy mb-3"><i class="bi bi-sliders me-2 text-primary"></i>Operational Parameters</h6>
+
+          <div class="mb-3">
+            <label class="form-label small fw-bold text-muted">Platform Title</label>
+            <input type="text" class="form-control" value="{{ app_name }}" readonly>
+          </div>
+
+          <div class="row g-3 mb-3">
+            <div class="col-md-6">
+              <label class="form-label small fw-bold text-muted">Demonstration Mode</label>
+              <input type="text" class="form-control" value="ACTIVE (Academic Demonstration)" readonly>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-bold text-muted">Aviation Tax Rate (GST)</label>
+              <input type="text" class="form-control" value="5.0% (Configured Domestic)" readonly>
+            </div>
+          </div>
+
+          <div class="row g-3 mb-3">
+            <div class="col-md-6">
+              <label class="form-label small fw-bold text-muted">User Development Fee (UDF)</label>
+              <input type="text" class="form-control" value="₹250.00 / Passenger" readonly>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-bold text-muted">Database Storage Engine</label>
+              <input type="text" class="form-control font-monospace" value="SQLite (ACID Compliant)" readonly>
+            </div>
+          </div>
+        </div>
+
+        <div class="aviation-card p-4">
+          <h6 class="fw-bold text-navy mb-2"><i class="bi bi-cloud-arrow-up me-2 text-primary"></i>Live Aviation API Gateway Integration</h6>
+          <p class="small text-muted mb-3">
+            To connect a third-party commercial aviation telemetry provider (e.g., AviationStack, FlightAware, OpenSky), configure the provider credentials in your <code>.env</code> file. In absence of external credentials, the platform utilizes its persistent database model and reference schedule timetable.
+          </p>
+          <div class="p-3 bg-light rounded border font-monospace small">
+            <div>AVIATION_API_PROVIDER=NONE_FALLBACK_TO_DATABASE</div>
+            <div>AVIATION_API_KEY=&lt;configured-in-env&gt;</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-4">
+        <div class="aviation-card p-4">
+          <h6 class="fw-bold text-navy mb-2"><i class="bi bi-info-circle me-1 text-primary"></i>Database Seeding Status</h6>
+          <div class="small text-muted mb-3">
+            The platform is pre-loaded with:
+          </div>
+          <ul class="list-unstyled small mb-3">
+            <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>110 Real Indian Airports</li>
+            <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>6 Domestic Airlines</li>
+            <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>4 Fleet Aircraft Models</li>
+            <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>Male &amp; Female Gender Seats</li>
+          </ul>
+          <span class="badge bg-success bg-opacity-10 text-success border border-success p-2 w-100 text-center">
+            Database Healthy &amp; Synchronized
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

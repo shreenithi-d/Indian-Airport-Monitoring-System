@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+
+{% block title %}My Profile - {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <div class="row g-4">
+    <div class="col-md-4">
+      <div class="aviation-card p-4 text-center">
+        <div class="user-avatar-pill mx-auto mb-3" style="width: 80px; height: 80px; font-size: 2rem;">
+          {{ user.full_name[:1].upper() }}
+        </div>
+        <h5 class="fw-bold text-navy mb-1">{{ user.full_name }}</h5>
+        <p class="text-muted small mb-2">{{ user.email }}</p>
+        <span class="badge bg-primary text-uppercase px-3 py-1">{{ user.role }}</span>
+        <div class="mt-3 text-muted small">
+          Member since {{ user.created_at|date }}
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-8">
+      <!-- Edit Profile -->
+      <div class="aviation-card p-4 mb-4">
+        <h6 class="fw-bold text-navy mb-3"><i class="bi bi-person-gear me-2 text-primary"></i>Personal Details</h6>
+        <form method="POST" action="{{ url_for('auth.profile') }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <input type="hidden" name="action" value="update_info">
+
+          <div class="row g-3 mb-3">
+            <div class="col-md-6">
+              <label class="form-label small fw-bold text-muted">Full Name</label>
+              <input type="text" name="full_name" class="form-control" value="{{ user.full_name }}" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-bold text-muted">Email Address</label>
+              <input type="email" class="form-control bg-light" value="{{ user.email }}" disabled>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-bold text-muted">Phone Number</label>
+              <input type="tel" name="phone_number" class="form-control" value="{{ user.phone_number or '' }}">
+            </div>
+          </div>
+          <button type="submit" class="btn btn-aviation-primary btn-sm">Save Profile Changes</button>
+        </form>
+      </div>
+
+      <!-- Change Password -->
+      <div class="aviation-card p-4">
+        <h6 class="fw-bold text-navy mb-3"><i class="bi bi-shield-lock me-2 text-primary"></i>Security &amp; Password</h6>
+        <form method="POST" action="{{ url_for('auth.profile') }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <input type="hidden" name="action" value="change_password">
+
+          <div class="row g-3 mb-3">
+            <div class="col-md-4">
+              <label class="form-label small fw-bold text-muted">Current Password</label>
+              <input type="password" name="old_password" class="form-control" required>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small fw-bold text-muted">New Password</label>
+              <input type="password" name="new_password" class="form-control" required>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small fw-bold text-muted">Confirm New Password</label>
+              <input type="password" name="confirm_new_password" class="form-control" required>
+            </div>
+          </div>
+          <button type="submit" class="btn btn-outline-primary btn-sm">Update Password</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

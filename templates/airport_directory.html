@@ -1,0 +1,158 @@
+{% extends 'base.html' %}
+
+{% block title %}Airport Directory - {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <!-- Header -->
+  <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4">
+    <div>
+      <h3 class="fw-bold text-navy mb-1">Indian Airport Directory</h3>
+      <p class="text-muted small mb-0">Browse and filter verified airport records, terminal info and facilities</p>
+    </div>
+    <div class="d-flex gap-2 mt-2 mt-md-0">
+      <a href="{{ url_for('airports.map_view') }}" class="btn btn-aviation-primary btn-sm">
+        <i class="bi bi-map-fill me-1"></i>Switch to Interactive Map
+      </a>
+    </div>
+  </div>
+
+  <!-- Search & Filter Card -->
+  <div class="aviation-card p-3 mb-4">
+    <form method="GET" action="{{ url_for('airports.airport_list') }}">
+      <div class="row g-2 align-items-end">
+        <div class="col-md-4">
+          <label class="form-label small fw-bold text-muted">Search Airport</label>
+          <div class="input-group input-group-sm">
+            <span class="input-group-text bg-light"><i class="bi bi-search"></i></span>
+            <input type="text" name="search" class="form-control" placeholder="Search name, city, IATA code..." value="{{ search }}">
+          </div>
+        </div>
+
+        <div class="col-md-3">
+          <label class="form-label small fw-bold text-muted">Category</label>
+          <select name="category" class="form-select form-select-sm">
+            <option value="All" {% if selected_category == 'All' %}selected{% endif %}>All Categories</option>
+            <option value="International" {% if selected_category == 'International' %}selected{% endif %}>International</option>
+            <option value="Domestic" {% if selected_category == 'Domestic' %}selected{% endif %}>Domestic</option>
+            <option value="Customs" {% if selected_category == 'Customs' %}selected{% endif %}>Customs</option>
+          </select>
+        </div>
+
+        <div class="col-md-3">
+          <label class="form-label small fw-bold text-muted">State / UT</label>
+          <select name="state" class="form-select form-select-sm">
+            <option value="All" {% if selected_state == 'All' %}selected{% endif %}>All States</option>
+            {% for st in states %}
+              <option value="{{ st }}" {% if selected_state == st %}selected{% endif %}>{{ st }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="col-md-2">
+          <button type="submit" class="btn btn-aviation-primary btn-sm w-100">
+            <i class="bi bi-funnel me-1"></i>Apply Filters
+          </button>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <!-- Airports Table -->
+  <div class="aviation-card overflow-hidden">
+    {% if airports %}
+      <div class="table-responsive">
+        <table class="table aviation-table mb-0">
+          <thead>
+            <tr>
+              <th>Airport &amp; City</th>
+              <th>State</th>
+              <th>Codes</th>
+              <th>Category</th>
+              <th>Status</th>
+              <th>Coordinates</th>
+              <th class="text-end">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for apt in airports %}
+              <tr>
+                <td>
+                  <div class="fw-bold text-navy">{{ apt.name }}</div>
+                  <small class="text-muted"><i class="bi bi-geo-alt-fill text-danger me-1"></i>{{ apt.city }}</small>
+                </td>
+                <td><span class="badge bg-light text-dark border">{{ apt.state }}</span></td>
+                <td>
+                  <span class="badge bg-dark fw-bold me-1">{{ apt.iata_code or '—' }}</span>
+                  <span class="badge bg-secondary fw-normal">{{ apt.icao_code or '—' }}</span>
+                </td>
+                <td>
+                  <span class="badge badge-{{ apt.category.lower() }}">{{ apt.category }}</span>
+                </td>
+                <td>
+                  <span class="badge badge-{{ 'operational' if apt.operational_status == 'Operational' else 'non-operational' }}">
+                    {{ apt.operational_status }}
+                  </span>
+                </td>
+                <td>
+                  <small class="text-muted font-monospace">{{ "%.3f"|format(apt.latitude) }}, {{ "%.3f"|format(apt.longitude) }}</small>
+                </td>
+                <td class="text-end">
+                  <div class="btn-group btn-group-sm">
+                    <a href="{{ url_for('airports.map_view', selected_id=apt.id) }}" class="btn btn-outline-secondary" title="View on Map">
+                      <i class="bi bi-map"></i>
+                    </a>
+                    <a href="{{ url_for('airports.airport_details', airport_id=apt.id) }}" class="btn btn-aviation-primary" title="Details">
+                      <i class="bi bi-arrow-right"></i>
+                    </a>
+                  </div>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      {% if pagination.pages > 1 %}
+        <div class="p-3 border-top d-flex justify-content-between align-items-center">
+          <small class="text-muted">
+            Showing Page <strong>{{ pagination.page }}</strong> of <strong>{{ pagination.pages }}</strong> ({{ pagination.total }} airports)
+          </small>
+          <ul class="pagination pagination-sm m-0">
+            {% if pagination.has_prev %}
+              <li class="page-item">
+                <a class="page-link" href="{{ url_for('airports.airport_list', page=pagination.prev_num, search=search, category=selected_category, state=selected_state) }}">Previous</a>
+              </li>
+            {% endif %}
+
+            {% for p in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+              {% if p %}
+                <li class="page-item {% if p == pagination.page %}active{% endif %}">
+                  <a class="page-link" href="{{ url_for('airports.airport_list', page=p, search=search, category=selected_category, state=selected_state) }}">{{ p }}</a>
+                </li>
+              {% else %}
+                <li class="page-item disabled"><span class="page-link">&hellip;</span></li>
+              {% endif %}
+            {% endfor %}
+
+            {% if pagination.has_next %}
+              <li class="page-item">
+                <a class="page-link" href="{{ url_for('airports.airport_list', page=pagination.next_num, search=search, category=selected_category, state=selected_state) }}">Next</a>
+              </li>
+            {% endif %}
+          </ul>
+        </div>
+      {% endif %}
+
+    {% else %}
+      <div class="p-5 text-center">
+        <img src="{{ url_for('static', filename='images/empty-state.svg') }}" alt="No airports" width="120" class="mb-3">
+        <h5 class="fw-bold text-navy">No Matching Airports Found</h5>
+        <p class="text-muted small">Try modifying your search criteria or resetting filters.</p>
+        <a href="{{ url_for('airports.airport_list') }}" class="btn btn-outline-primary btn-sm">Clear Filters</a>
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

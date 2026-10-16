@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+
+{% block title %}Fleet &amp; Aircraft Layouts - Admin Console{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper">
+  <!-- Admin Sidebar -->
+  <aside class="dashboard-sidebar">
+    <div class="sidebar-header">
+      <span class="fw-bold text-white small text-uppercase letter-spacing-1">
+        <i class="bi bi-shield-lock-fill text-warning me-2"></i>Admin Console
+      </span>
+    </div>
+    <ul class="sidebar-menu">
+      <li class="sidebar-item"><a href="{{ url_for('admin.dashboard') }}" class="sidebar-link"><i class="bi bi-speedometer2"></i>Overview</a></li>
+      <li class="sidebar-section-title">Aviation Management</li>
+      <li class="sidebar-item"><a href="{{ url_for('admin.airports') }}" class="sidebar-link"><i class="bi bi-building"></i>Airports</a></li>
+      <li class="sidebar-item"><a href="{{ url_for('admin.flights') }}" class="sidebar-link"><i class="bi bi-airplane"></i>Flights &amp; Schedules</a></li>
+      <li class="sidebar-item"><a href="{{ url_for('admin.fleet') }}" class="sidebar-link active"><i class="bi bi-grid-3x3"></i>Fleet &amp; Seats</a></li>
+      <li class="sidebar-section-title">Passenger Operations</li>
+      <li class="sidebar-item"><a href="{{ url_for('admin.bookings') }}" class="sidebar-link"><i class="bi bi-ticket-perforated"></i>Bookings</a></li>
+      <li class="sidebar-item"><a href="{{ url_for('admin.users') }}" class="sidebar-link"><i class="bi bi-people"></i>Passengers</a></li>
+      <li class="sidebar-section-title">Monitoring &amp; Audit</li>
+      <li class="sidebar-item"><a href="{{ url_for('admin.analytics') }}" class="sidebar-link"><i class="bi bi-bar-chart-line"></i>Analytics</a></li>
+      <li class="sidebar-item"><a href="{{ url_for('admin.audit_logs') }}" class="sidebar-link"><i class="bi bi-journal-text"></i>Audit Logs</a></li>
+      <li class="sidebar-item"><a href="{{ url_for('admin.settings') }}" class="sidebar-link"><i class="bi bi-gear"></i>Settings</a></li>
+    </ul>
+  </aside>
+
+  <!-- Content -->
+  <div class="dashboard-main">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <div>
+        <h4 class="fw-bold text-navy m-0">Aircraft Fleet &amp; Cabin Configurations</h4>
+        <p class="text-muted small m-0">Manage physical aircraft models, seating matrices, and row assignments</p>
+      </div>
+    </div>
+
+    <div class="row g-4">
+      {% for ac in aircraft_list %}
+        <div class="col-md-6 col-lg-3">
+          <div class="aviation-card p-4 h-100 d-flex flex-column text-center">
+            <div class="p-3 bg-light rounded-circle mx-auto mb-3" style="width: 70px; height: 70px;">
+              <i class="bi bi-airplane-engines text-primary fs-2"></i>
+            </div>
+            <h5 class="fw-bold text-navy mb-1">{{ ac.model }}</h5>
+            <span class="badge bg-dark font-monospace mb-2">{{ ac.registration }}</span>
+            
+            <div class="p-2 bg-light rounded border text-start small mb-3">
+              <div class="d-flex justify-content-between mb-1">
+                <span class="text-muted">Layout:</span>
+                <strong>{{ ac.layout_configuration }}</strong>
+              </div>
+              <div class="d-flex justify-content-between mb-1">
+                <span class="text-muted">Total Rows:</span>
+                <strong>{{ ac.total_rows }}</strong>
+              </div>
+              <div class="d-flex justify-content-between">
+                <span class="text-muted">Capacity:</span>
+                <strong class="text-success">{{ ac.seat_capacity }} seats</strong>
+              </div>
+            </div>
+
+            <div class="mt-auto">
+              <a href="{{ url_for('admin.seat_management', aircraft_id=ac.id) }}" class="btn btn-outline-primary btn-sm w-100">
+                <i class="bi bi-grid-3x3 me-1"></i>View Cabin Grid ({{ ac.seats.count() }})
+              </a>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}

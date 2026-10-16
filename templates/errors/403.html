@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+
+{% block title %}403 Forbidden - {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="container py-5 text-center">
+  <div class="stat-icon-wrapper bg-danger bg-opacity-10 text-danger mx-auto mb-3" style="width: 80px; height: 80px;">
+    <i class="bi bi-shield-x fs-1"></i>
+  </div>
+  <h2 class="fw-bold text-navy mb-2">403 - Access Prohibited</h2>
+  <p class="text-muted small max-w-500 mx-auto mb-4">
+    You do not possess the required administrative clearance or ownership rights to view this aviation operational resource.
+  </p>
+  <div class="d-flex justify-content-center gap-2">
+    <a href="{{ url_for('main.landing') }}" class="btn btn-aviation-primary btn-sm">
+      <i class="bi bi-house me-1"></i>Return to Home
+    </a>
+    <a href="{{ url_for('auth.login') }}" class="btn btn-outline-secondary btn-sm">
+      <i class="bi bi-box-arrow-in-right me-1"></i>Sign in with Another Account
+    </a>
+  </div>
+</div>
+{% endblock %}

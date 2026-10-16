@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48">
+  <defs>
+    <linearGradient id="planeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#42D9F5" />
+      <stop offset="100%" stop-color="#1769FF" />
+    </linearGradient>
+    <linearGradient id="radarGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0B1739" />
+      <stop offset="100%" stop-color="#152A55" />
+    </linearGradient>
+  </defs>
+  <!-- Background Circle / Radar -->
+  <circle cx="24" cy="24" r="22" fill="url(#radarGrad)" stroke="#42D9F5" stroke-width="1.5" stroke-opacity="0.4" />
+  <circle cx="24" cy="24" r="14" fill="none" stroke="#39A0FF" stroke-width="1" stroke-dasharray="3,3" stroke-opacity="0.6" />
+  <circle cx="24" cy="24" r="6" fill="none" stroke="#42D9F5" stroke-width="1" stroke-opacity="0.8" />
+  <!-- Airplane Silhouette -->
+  <path d="M24 10 L28 20 L40 25 L40 28 L28 26 L27 34 L31 37 L31 39 L24 38 L17 39 L17 37 L21 34 L20 26 L8 28 L8 25 L20 20 Z" fill="url(#planeGrad)" />
+</svg>

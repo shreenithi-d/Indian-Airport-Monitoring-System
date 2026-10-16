@@ -1,0 +1,139 @@
+{% extends 'base.html' %}
+
+{% block title %}Manage Passengers - Admin Console{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper">
+  <!-- Admin Sidebar -->
+  <aside class="dashboard-sidebar">
+    <div class="sidebar-header">
+      <span class="fw-bold text-white small text-uppercase letter-spacing-1">
+        <i class="bi bi-shield-lock-fill text-warning me-2"></i>Admin Console
+      </span>
+    </div>
+    <ul class="sidebar-menu">
+      <li class="sidebar-item"><a href="{{ url_for('admin.dashboard') }}" class="sidebar-link"><i class="bi bi-speedometer2"></i>Overview</a></li>
+      <li class="sidebar-section-title">Aviation Management</li>
+      <li class="sidebar-item"><a href="{{ url_for('admin.airports') }}" class="sidebar-link"><i class="bi bi-building"></i>Airports</a></li>
+      <li class="sidebar-item"><a href="{{ url_for('admin.flights') }}" class="sidebar-link"><i class="bi bi-airplane"></i>Flights &amp; Schedules</a></li>
+      <li class="sidebar-item"><a href="{{ url_for('admin.fleet') }}" class="sidebar-link"><i class="bi bi-grid-3x3"></i>Fleet &amp; Seats</a></li>
+      <li class="sidebar-section-title">Passenger Operations</li>
+      <li class="sidebar-item"><a href="{{ url_for('admin.bookings') }}" class="sidebar-link"><i class="bi bi-ticket-perforated"></i>Bookings</a></li>
+      <li class="sidebar-item"><a href="{{ url_for('admin.users') }}" class="sidebar-link active"><i class="bi bi-people"></i>Passengers</a></li>
+      <li class="sidebar-section-title">Monitoring &amp; Audit</li>
+      <li class="sidebar-item"><a href="{{ url_for('admin.analytics') }}" class="sidebar-link"><i class="bi bi-bar-chart-line"></i>Analytics</a></li>
+      <li class="sidebar-item"><a href="{{ url_for('admin.audit_logs') }}" class="sidebar-link"><i class="bi bi-journal-text"></i>Audit Logs</a></li>
+      <li class="sidebar-item"><a href="{{ url_for('admin.settings') }}" class="sidebar-link"><i class="bi bi-gear"></i>Settings</a></li>
+    </ul>
+  </aside>
+
+  <!-- Content -->
+  <div class="dashboard-main">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <div>
+        <h4 class="fw-bold text-navy m-0">Passenger &amp; User Accounts</h4>
+        <p class="text-muted small m-0">Manage registered passengers, roles, account statuses and booking activities</p>
+      </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="aviation-card p-3 mb-4">
+      <form method="GET" action="{{ url_for('admin.users') }}" class="row g-2 align-items-end">
+        <div class="col-md-6">
+          <label class="form-label small fw-bold text-muted">Search Name or Email</label>
+          <div class="input-group input-group-sm">
+            <span class="input-group-text bg-light"><i class="bi bi-search"></i></span>
+            <input type="text" name="search" class="form-control" placeholder="Search..." value="{{ search }}">
+          </div>
+        </div>
+
+        <div class="col-md-4">
+          <label class="form-label small fw-bold text-muted">Account Role</label>
+          <select name="role" class="form-select form-select-sm" onchange="this.form.submit()">
+            <option value="All" {% if role == 'All' %}selected{% endif %}>All Roles</option>
+            <option value="passenger" {% if role == 'passenger' %}selected{% endif %}>Passengers</option>
+            <option value="admin" {% if role == 'admin' %}selected{% endif %}>Administrators</option>
+          </select>
+        </div>
+
+        <div class="col-md-2">
+          <button type="submit" class="btn btn-outline-primary btn-sm w-100">Filter</button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Users Table -->
+    <div class="aviation-card overflow-hidden">
+      <div class="table-responsive">
+        <table class="table aviation-table mb-0">
+          <thead>
+            <tr>
+              <th>Passenger</th>
+              <th>Phone</th>
+              <th>Role</th>
+              <th>Status</th>
+              <th>Registered</th>
+              <th>Bookings</th>
+              <th class="text-end">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for u in users %}
+              <tr>
+                <td>
+                  <div class="d-flex align-items-center gap-2">
+                    <div class="user-avatar-pill" style="width: 30px; height: 30px; font-size: 0.75rem;">
+                      {{ u.full_name[:1].upper() }}
+                    </div>
+                    <div>
+                      <strong class="text-navy">{{ u.full_name }}</strong>
+                      <div class="small text-muted">{{ u.email }}</div>
+                    </div>
+                  </div>
+                </td>
+                <td>{{ u.phone_number or '—' }}</td>
+                <td><span class="badge bg-primary text-uppercase">{{ u.role }}</span></td>
+                <td>
+                  <span class="badge {% if u.account_status == 'active' %}bg-success{% else %}bg-danger{% endif %}">
+                    {{ u.account_status }}
+                  </span>
+                </td>
+                <td><small class="text-muted">{{ u.created_at|date }}</small></td>
+                <td><strong>{{ u.bookings.count() }}</strong></td>
+                <td class="text-end">
+                  {% if not u.is_admin %}
+                    <form method="POST" action="{{ url_for('admin.toggle_user_status', user_id=u.id) }}" class="d-inline">
+                      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                      <button type="submit" class="btn btn-sm {% if u.account_status == 'active' %}btn-outline-danger{% else %}btn-outline-success{% endif %}">
+                        {% if u.account_status == 'active' %}Suspend{% else %}Activate{% endif %}
+                      </button>
+                    </form>
+                  {% else %}
+                    <span class="badge bg-secondary">System Admin</span>
+                  {% endif %}
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      {% if pagination.pages > 1 %}
+        <div class="p-3 border-top d-flex justify-content-between align-items-center">
+          <small class="text-muted">Showing page {{ pagination.page }} of {{ pagination.pages }}</small>
+          <ul class="pagination pagination-sm m-0">
+            {% if pagination.has_prev %}
+              <li class="page-item"><a class="page-link" href="{{ url_for('admin.users', page=pagination.prev_num, search=search, role=role) }}">Prev</a></li>
+            {% endif %}
+            <li class="page-item active"><span class="page-link">{{ pagination.page }}</span></li>
+            {% if pagination.has_next %}
+              <li class="page-item"><a class="page-link" href="{{ url_for('admin.users', page=pagination.next_num, search=search, role=role) }}">Next</a></li>
+            {% endif %}
+          </ul>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

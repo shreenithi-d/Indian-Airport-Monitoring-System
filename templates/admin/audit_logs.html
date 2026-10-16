@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+
+{% block title %}System Audit Logs - Admin Console{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper">
+  <!-- Admin Sidebar -->
+  <aside class="dashboard-sidebar">
+    <div class="sidebar-header">
+      <span class="fw-bold text-white small text-uppercase letter-spacing-1">
+        <i class="bi bi-shield-lock-fill text-warning me-2"></i>Admin Console
+      </span>
+    </div>
+    <ul class="sidebar-menu">
+      <li class="sidebar-item"><a href="{{ url_for('admin.dashboard') }}" class="sidebar-link"><i class="bi bi-speedometer2"></i>Overview</a></li>
+      <li class="sidebar-section-title">Aviation Management</li>
+      <li class="sidebar-item"><a href="{{ url_for('admin.airports') }}" class="sidebar-link"><i class="bi bi-building"></i>Airports</a></li>
+      <li class="sidebar-item"><a href="{{ url_for('admin.flights') }}" class="sidebar-link"><i class="bi bi-airplane"></i>Flights &amp; Schedules</a></li>
+      <li class="sidebar-item"><a href="{{ url_for('admin.fleet') }}" class="sidebar-link"><i class="bi bi-grid-3x3"></i>Fleet &amp; Seats</a></li>
+      <li class="sidebar-section-title">Passenger Operations</li>
+      <li class="sidebar-item"><a href="{{ url_for('admin.bookings') }}" class="sidebar-link"><i class="bi bi-ticket-perforated"></i>Bookings</a></li>
+      <li class="sidebar-item"><a href="{{ url_for('admin.users') }}" class="sidebar-link"><i class="bi bi-people"></i>Passengers</a></li>
+      <li class="sidebar-section-title">Monitoring &amp; Audit</li>
+      <li class="sidebar-item"><a href="{{ url_for('admin.analytics') }}" class="sidebar-link"><i class="bi bi-bar-chart-line"></i>Analytics</a></li>
+      <li class="sidebar-item"><a href="{{ url_for('admin.audit_logs') }}" class="sidebar-link active"><i class="bi bi-journal-text"></i>Audit Logs</a></li>
+      <li class="sidebar-item"><a href="{{ url_for('admin.settings') }}" class="sidebar-link"><i class="bi bi-gear"></i>Settings</a></li>
+    </ul>
+  </aside>
+
+  <!-- Content -->
+  <div class="dashboard-main">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <div>
+        <h4 class="fw-bold text-navy m-0">Administrative Audit Trail</h4>
+        <p class="text-muted small m-0">Immutable records of administrative operations, updates, and cancellations</p>
+      </div>
+    </div>
+
+    <!-- Logs Table -->
+    <div class="aviation-card overflow-hidden">
+      <div class="table-responsive">
+        <table class="table aviation-table mb-0">
+          <thead>
+            <tr>
+              <th>Timestamp</th>
+              <th>Action Code</th>
+              <th>Actor User</th>
+              <th>Target Entity</th>
+              <th>Description / Notes</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for log in logs %}
+              <tr>
+                <td><small class="text-muted">{{ log.created_at|datetime }}</small></td>
+                <td><span class="badge bg-dark font-monospace">{{ log.action }}</span></td>
+                <td>
+                  {% if log.actor %}
+                    <strong>{{ log.actor.full_name }}</strong>
+                    <div class="small text-muted">{{ log.actor.email }}</div>
+                  {% else %}
+                    <span class="text-muted">System Automator</span>
+                  {% endif %}
+                </td>
+                <td><span class="badge bg-light text-dark border">{{ log.entity_type }}{% if log.entity_id %}:{{ log.entity_id }}{% endif %}</span></td>
+                <td><small class="text-secondary">{{ log.notes }}</small></td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      {% if pagination.pages > 1 %}
+        <div class="p-3 border-top d-flex justify-content-between align-items-center">
+          <small class="text-muted">Showing page {{ pagination.page }} of {{ pagination.pages }}</small>
+          <ul class="pagination pagination-sm m-0">
+            {% if pagination.has_prev %}
+              <li class="page-item"><a class="page-link" href="{{ url_for('admin.audit_logs', page=pagination.prev_num) }}">Prev</a></li>
+            {% endif %}
+            <li class="page-item active"><span class="page-link">{{ pagination.page }}</span></li>
+            {% if pagination.has_next %}
+              <li class="page-item"><a class="page-link" href="{{ url_for('admin.audit_logs', page=pagination.next_num) }}">Next</a></li>
+            {% endif %}
+          </ul>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

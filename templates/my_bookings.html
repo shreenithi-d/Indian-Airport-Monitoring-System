@@ -1,0 +1,125 @@
+{% extends 'base.html' %}
+
+{% block title %}My Bookings - {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4">
+    <div>
+      <h3 class="fw-bold text-navy m-0">My Flight Bookings</h3>
+      <p class="text-muted small m-0">Manage scheduled journeys, print boarding passes, or process cancellations</p>
+    </div>
+    <div class="d-flex gap-2 mt-2 mt-md-0">
+      <a href="{{ url_for('flights.search') }}" class="btn btn-aviation-primary btn-sm">
+        <i class="bi bi-plus-circle me-1"></i>Book New Journey
+      </a>
+    </div>
+  </div>
+
+  <!-- Filter & Search Bar -->
+  <div class="aviation-card p-3 mb-4">
+    <form method="GET" action="{{ url_for('bookings.my_bookings') }}" class="row g-2 align-items-center">
+      <div class="col-md-6">
+        <div class="input-group input-group-sm">
+          <span class="input-group-text bg-light"><i class="bi bi-search"></i></span>
+          <input type="text" name="search" class="form-control" placeholder="Search by PNR reference (e.g. IN-849201)..." value="{{ search }}">
+        </div>
+      </div>
+
+      <div class="col-md-4">
+        <select name="status" class="form-select form-select-sm" onchange="this.form.submit()">
+          <option value="All" {% if selected_status == 'All' %}selected{% endif %}>All Booking Statuses</option>
+          <option value="Confirmed" {% if selected_status == 'Confirmed' %}selected{% endif %}>Confirmed</option>
+          <option value="Cancelled" {% if selected_status == 'Cancelled' %}selected{% endif %}>Cancelled</option>
+        </select>
+      </div>
+
+      <div class="col-md-2">
+        <button type="submit" class="btn btn-outline-primary btn-sm w-100">Filter</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Bookings List -->
+  {% if bookings %}
+    <div class="d-flex flex-column gap-3">
+      {% for b in bookings %}
+        <div class="aviation-card p-4">
+          <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center border-bottom pb-3 mb-3">
+            <div>
+              <div class="d-flex align-items-center gap-2 mb-1">
+                <span class="badge bg-dark font-monospace fs-6">{{ b.booking_reference }}</span>
+                <span class="badge 
+                  {% if b.booking_status == 'Confirmed' %}bg-success
+                  {% elif b.booking_status == 'Cancelled' %}bg-danger
+                  {% else %}bg-secondary{% endif %}">
+                  {{ b.booking_status }}
+                </span>
+                <small class="text-muted">Booked on {{ b.created_at|datetime }}</small>
+              </div>
+              <h5 class="fw-bold text-navy mb-0">
+                {{ b.flight.airline.name }} &bull; {{ b.flight.flight_number }}
+              </h5>
+            </div>
+
+            <div class="text-md-end mt-2 mt-md-0">
+              <small class="text-muted d-block">Amount</small>
+              <strong class="fs-4 text-navy">{{ b.total_amount|currency }}</strong>
+            </div>
+          </div>
+
+          <div class="row g-3 align-items-center">
+            <div class="col-md-6">
+              <div class="d-flex align-items-center gap-3">
+                <div>
+                  <strong class="text-navy d-block">{{ b.flight.origin_airport.city }}</strong>
+                  <span class="badge bg-light text-dark border">{{ b.flight.origin_airport.iata_code or b.flight.origin_airport.icao_code }}</span>
+                </div>
+                <div class="text-center px-2">
+                  <i class="bi bi-arrow-right text-primary fs-5"></i>
+                </div>
+                <div>
+                  <strong class="text-navy d-block">{{ b.flight.destination_airport.city }}</strong>
+                  <span class="badge bg-light text-dark border">{{ b.flight.destination_airport.iata_code or b.flight.destination_airport.icao_code }}</span>
+                </div>
+              </div>
+              <small class="text-muted d-block mt-2">
+                <i class="bi bi-clock me-1"></i>{{ b.flight.scheduled_departure|datetime }} &bull; Gate {{ b.flight.gate or 'G1' }}
+              </small>
+            </div>
+
+            <div class="col-md-3">
+              <small class="text-muted d-block">Passengers &amp; Seats ({{ b.passenger_count }}):</small>
+              <div class="d-flex flex-wrap gap-1 mt-1">
+                {% for p in b.passengers %}
+                  <span class="badge bg-primary">{{ p.full_name }} &bull; {{ p.seat_number }}</span>
+                {% endfor %}
+              </div>
+            </div>
+
+            <div class="col-md-3 text-md-end">
+              <div class="d-flex gap-2 justify-content-md-end flex-wrap">
+                <a href="{{ url_for('bookings.booking_details', booking_id=b.id) }}" class="btn btn-sm btn-outline-secondary">
+                  Details
+                </a>
+                {% if b.booking_status == 'Confirmed' %}
+                  <a href="{{ url_for('bookings.ticket_view', booking_id=b.id) }}" class="btn btn-sm btn-aviation-primary">
+                    <i class="bi bi-qr-code me-1"></i>Boarding Pass
+                  </a>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="aviation-card p-5 text-center">
+      <img src="{{ url_for('static', filename='images/empty-state.svg') }}" alt="No Bookings" width="130" class="mb-3">
+      <h4 class="fw-bold text-navy">No Bookings Found</h4>
+      <p class="text-muted small">You don't have any bookings matching your current query.</p>
+      <a href="{{ url_for('flights.search') }}" class="btn btn-aviation-primary btn-sm">Find and Book Flights</a>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

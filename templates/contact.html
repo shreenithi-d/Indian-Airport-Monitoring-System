@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+
+{% block title %}Contact &amp; Assistance - {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-md-7 col-lg-6">
+      <div class="aviation-card p-4 p-md-5">
+        <h4 class="fw-bold text-navy mb-1">Aviation Help &amp; Support</h4>
+        <p class="text-muted small mb-4">Contact demonstration technical assistance or system administrators</p>
+
+        <div class="mb-4">
+          <div class="p-3 bg-light rounded border mb-3">
+            <h6 class="fw-bold text-navy mb-1"><i class="bi bi-geo-alt-fill text-danger me-1"></i>Project Office</h6>
+            <p class="small text-muted mb-0">Indian Airport Monitoring System Development Project, Academic Aviation Center, New Delhi, India.</p>
+          </div>
+
+          <div class="p-3 bg-light rounded border mb-3">
+            <h6 class="fw-bold text-navy mb-1"><i class="bi bi-envelope-fill text-primary me-1"></i>Support Email</h6>
+            <p class="small text-muted mb-0">support@airportmonitor.in &bull; admin@airportmonitor.in</p>
+          </div>
+
+          <div class="p-3 bg-light rounded border">
+            <h6 class="fw-bold text-navy mb-1"><i class="bi bi-telephone-fill text-success me-1"></i>Aviation Operations Desk</h6>
+            <p class="small text-muted mb-0">+91 (011) 2465-9876 (Operational Reference Demonstration Only)</p>
+          </div>
+        </div>
+
+        <div class="text-center">
+          <a href="{{ url_for('main.landing') }}" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-arrow-left me-1"></i>Return to Home
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

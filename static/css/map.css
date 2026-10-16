@@ -1,0 +1,164 @@
+/* Interactive Leaflet Map Styles */
+.map-container-wrapper {
+  position: relative;
+  width: 100%;
+  height: 680px;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid #E2E8F0;
+  box-shadow: 0 4px 16px rgba(11, 23, 57, 0.08);
+}
+
+#india-airport-map {
+  width: 100%;
+  height: 100%;
+  background-color: #E5EDF5;
+  z-index: 1;
+}
+
+/* Floating map controls */
+.map-floating-panel {
+  position: absolute;
+  top: 15px;
+  left: 15px;
+  z-index: 1000;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(8px);
+  padding: 1rem;
+  border-radius: 10px;
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+  width: 320px;
+  max-width: 90vw;
+}
+
+.map-legend-panel {
+  position: absolute;
+  bottom: 25px;
+  right: 15px;
+  z-index: 1000;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(6px);
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  border: 1px solid #E2E8F0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  font-size: 0.8rem;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.legend-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.dot-international { background-color: #1769FF; }
+.dot-domestic { background-color: #16A673; }
+.dot-customs { background-color: #F5A623; }
+.dot-development { background-color: #94A3B8; }
+
+/* Custom Leaflet Marker Icons */
+.custom-airport-pin {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  color: #FFFFFF;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.25);
+  font-size: 0.9rem;
+  border: 2px solid #FFFFFF;
+  transition: transform 0.2s ease;
+}
+
+.custom-airport-pin:hover {
+  transform: scale(1.2);
+  z-index: 9999 !important;
+}
+
+.pin-international { background: #1769FF; }
+.pin-domestic { background: #16A673; }
+.pin-customs { background: #F5A623; }
+.pin-development { background: #64748B; }
+
+/* Leaflet Popup customization */
+.leaflet-popup-content-wrapper {
+  border-radius: 10px;
+  box-shadow: 0 6px 20px rgba(11, 23, 57, 0.15);
+  padding: 0;
+  overflow: hidden;
+}
+
+.leaflet-popup-content {
+  margin: 0;
+  line-height: 1.4;
+}
+
+.popup-airport-card {
+  padding: 1rem;
+  width: 260px;
+}
+
+.popup-airport-header {
+  border-bottom: 1px solid #F1F5F9;
+  padding-bottom: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.popup-airport-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--primary-navy);
+  margin: 0;
+}
+
+.popup-airport-sub {
+  font-size: 0.8rem;
+  color: var(--secondary-text);
+  margin: 0;
+}
+
+.popup-badge-code {
+  background: #0B1739;
+  color: #FFFFFF;
+  font-weight: 800;
+  font-size: 0.75rem;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.popup-stat-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin: 0.75rem 0;
+  text-align: center;
+}
+
+.popup-stat-box {
+  background: #F8FAFC;
+  padding: 6px;
+  border-radius: 6px;
+  border: 1px solid #E2E8F0;
+}
+
+.popup-stat-num {
+  font-weight: 700;
+  color: var(--secondary-blue);
+  font-size: 1.1rem;
+}
+
+.popup-stat-label {
+  font-size: 0.7rem;
+  color: var(--secondary-text);
+  text-transform: uppercase;
+}

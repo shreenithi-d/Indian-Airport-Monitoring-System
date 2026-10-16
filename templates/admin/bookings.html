@@ -1,0 +1,144 @@
+{% extends 'base.html' %}
+
+{% block title %}Manage Bookings - Admin Console{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper">
+  <!-- Admin Sidebar -->
+  <aside class="dashboard-sidebar">
+    <div class="sidebar-header">
+      <span class="fw-bold text-white small text-uppercase letter-spacing-1">
+        <i class="bi bi-shield-lock-fill text-warning me-2"></i>Admin Console
+      </span>
+    </div>
+    <ul class="sidebar-menu">
+      <li class="sidebar-item"><a href="{{ url_for('admin.dashboard') }}" class="sidebar-link"><i class="bi bi-speedometer2"></i>Overview</a></li>
+      <li class="sidebar-section-title">Aviation Management</li>
+      <li class="sidebar-item"><a href="{{ url_for('admin.airports') }}" class="sidebar-link"><i class="bi bi-building"></i>Airports</a></li>
+      <li class="sidebar-item"><a href="{{ url_for('admin.flights') }}" class="sidebar-link"><i class="bi bi-airplane"></i>Flights &amp; Schedules</a></li>
+      <li class="sidebar-item"><a href="{{ url_for('admin.fleet') }}" class="sidebar-link"><i class="bi bi-grid-3x3"></i>Fleet &amp; Seats</a></li>
+      <li class="sidebar-section-title">Passenger Operations</li>
+      <li class="sidebar-item"><a href="{{ url_for('admin.bookings') }}" class="sidebar-link active"><i class="bi bi-ticket-perforated"></i>Bookings</a></li>
+      <li class="sidebar-item"><a href="{{ url_for('admin.users') }}" class="sidebar-link"><i class="bi bi-people"></i>Passengers</a></li>
+      <li class="sidebar-section-title">Monitoring &amp; Audit</li>
+      <li class="sidebar-item"><a href="{{ url_for('admin.analytics') }}" class="sidebar-link"><i class="bi bi-bar-chart-line"></i>Analytics</a></li>
+      <li class="sidebar-item"><a href="{{ url_for('admin.audit_logs') }}" class="sidebar-link"><i class="bi bi-journal-text"></i>Audit Logs</a></li>
+      <li class="sidebar-item"><a href="{{ url_for('admin.settings') }}" class="sidebar-link"><i class="bi bi-gear"></i>Settings</a></li>
+    </ul>
+  </aside>
+
+  <!-- Content -->
+  <div class="dashboard-main">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <div>
+        <h4 class="fw-bold text-navy m-0">Passenger Bookings Master Records</h4>
+        <p class="text-muted small m-0">Monitor ticket transactions, seat allocations, and administrative cancellations</p>
+      </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="aviation-card p-3 mb-4">
+      <form method="GET" action="{{ url_for('admin.bookings') }}" class="row g-2 align-items-end">
+        <div class="col-md-5">
+          <label class="form-label small fw-bold text-muted">Search PNR Reference</label>
+          <div class="input-group input-group-sm">
+            <span class="input-group-text bg-light"><i class="bi bi-search"></i></span>
+            <input type="text" name="search" class="form-control" placeholder="Search reference..." value="{{ search }}">
+          </div>
+        </div>
+
+        <div class="col-md-4">
+          <label class="form-label small fw-bold text-muted">Booking Status</label>
+          <select name="status" class="form-select form-select-sm" onchange="this.form.submit()">
+            <option value="All" {% if status == 'All' %}selected{% endif %}>All Statuses</option>
+            <option value="Confirmed" {% if status == 'Confirmed' %}selected{% endif %}>Confirmed</option>
+            <option value="Cancelled" {% if status == 'Cancelled' %}selected{% endif %}>Cancelled</option>
+          </select>
+        </div>
+
+        <div class="col-md-3">
+          <button type="submit" class="btn btn-outline-primary btn-sm w-100">Filter</button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Table -->
+    <div class="aviation-card overflow-hidden">
+      <div class="table-responsive">
+        <table class="table aviation-table mb-0">
+          <thead>
+            <tr>
+              <th>PNR Reference</th>
+              <th>User Account</th>
+              <th>Flight &amp; Airline</th>
+              <th>Route</th>
+              <th>Seats</th>
+              <th>Amount</th>
+              <th>Status</th>
+              <th class="text-end">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for b in bookings %}
+              <tr>
+                <td><strong class="font-monospace text-navy">{{ b.booking_reference }}</strong></td>
+                <td>
+                  <div>{{ b.user.full_name }}</div>
+                  <small class="text-muted">{{ b.user.email }}</small>
+                </td>
+                <td>
+                  <span class="badge bg-primary me-1">{{ b.flight.flight_number }}</span>
+                  <small>{{ b.flight.airline.name }}</small>
+                </td>
+                <td>{{ b.flight.origin_airport.city }} &rarr; {{ b.flight.destination_airport.city }}</td>
+                <td>
+                  {% for p in b.passengers %}
+                    <span class="badge bg-dark" style="font-size: 0.65rem;">{{ p.seat_number }}</span>
+                  {% endfor %}
+                </td>
+                <td><strong>{{ b.total_amount|currency }}</strong></td>
+                <td>
+                  <span class="badge {% if b.booking_status == 'Confirmed' %}bg-success{% else %}bg-danger{% endif %}">
+                    {{ b.booking_status }}
+                  </span>
+                </td>
+                <td class="text-end">
+                  <div class="btn-group btn-group-sm">
+                    <a href="{{ url_for('bookings.booking_details', booking_id=b.id) }}" class="btn btn-outline-secondary" title="View Details">
+                      <i class="bi bi-eye"></i>
+                    </a>
+                    {% if b.booking_status == 'Confirmed' %}
+                      <form method="POST" action="{{ url_for('admin.cancel_booking_admin', booking_id=b.id) }}" class="d-inline" onsubmit="return confirm('Cancel booking and release seats?');">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn btn-outline-danger" title="Admin Cancel">
+                          <i class="bi bi-x-circle"></i>
+                        </button>
+                      </form>
+                    {% endif %}
+                  </div>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      {% if pagination.pages > 1 %}
+        <div class="p-3 border-top d-flex justify-content-between align-items-center">
+          <small class="text-muted">Showing page {{ pagination.page }} of {{ pagination.pages }}</small>
+          <ul class="pagination pagination-sm m-0">
+            {% if pagination.has_prev %}
+              <li class="page-item"><a class="page-link" href="{{ url_for('admin.bookings', page=pagination.prev_num, search=search, status=status) }}">Prev</a></li>
+            {% endif %}
+            <li class="page-item active"><span class="page-link">{{ pagination.page }}</span></li>
+            {% if pagination.has_next %}
+              <li class="page-item"><a class="page-link" href="{{ url_for('admin.bookings', page=pagination.next_num, search=search, status=status) }}">Next</a></li>
+            {% endif %}
+          </ul>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}
