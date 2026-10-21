@@ -1,0 +1,13 @@
+# Python
+__pycache__/
+*.py[cod]
+venv/
+.env
+
+# Local SQLite databases
+*.db
+*.db-wal
+*.db-shm
+
+# Backups
+*.bundle
