@@ -13,10 +13,10 @@ class Booking(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     booking_reference = db.Column(db.String(20), unique=True, nullable=False, index=True, default=generate_booking_reference)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    flight_id = db.Column(db.Integer, db.ForeignKey('flights.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True)
+    flight_id = db.Column(db.Integer, db.ForeignKey('flights.id'), nullable=False, index=True)
     
-    booking_status = db.Column(db.String(30), nullable=False, default='Confirmed')  # Confirmed, Cancelled, Completed
+    booking_status = db.Column(db.String(30), nullable=False, default='Confirmed', index=True)  # Confirmed, Cancelled, Completed
     passenger_count = db.Column(db.Integer, nullable=False, default=1)
     
     base_fare_total = db.Column(db.Float, nullable=False, default=0.0)
@@ -44,7 +44,7 @@ class Passenger(db.Model):
     __tablename__ = 'passengers'
 
     id = db.Column(db.Integer, primary_key=True)
-    booking_id = db.Column(db.Integer, db.ForeignKey('bookings.id'), nullable=False)
+    booking_id = db.Column(db.Integer, db.ForeignKey('bookings.id'), nullable=False, index=True)
     full_name = db.Column(db.String(120), nullable=False)
     gender_selection = db.Column(db.String(20), nullable=False, default='Prefer not to say')  # 'Male', 'Female', 'Prefer not to say'
     age = db.Column(db.Integer, nullable=True)
@@ -61,12 +61,12 @@ class SeatReservation(db.Model):
     __tablename__ = 'seat_reservations'
 
     id = db.Column(db.Integer, primary_key=True)
-    flight_id = db.Column(db.Integer, db.ForeignKey('flights.id'), nullable=False)
-    aircraft_seat_id = db.Column(db.Integer, db.ForeignKey('aircraft_seats.id'), nullable=False)
-    passenger_id = db.Column(db.Integer, db.ForeignKey('passengers.id'), nullable=True)
-    booking_id = db.Column(db.Integer, db.ForeignKey('bookings.id'), nullable=True)
+    flight_id = db.Column(db.Integer, db.ForeignKey('flights.id'), nullable=False, index=True)
+    aircraft_seat_id = db.Column(db.Integer, db.ForeignKey('aircraft_seats.id'), nullable=False, index=True)
+    passenger_id = db.Column(db.Integer, db.ForeignKey('passengers.id'), nullable=True, index=True)
+    booking_id = db.Column(db.Integer, db.ForeignKey('bookings.id'), nullable=True, index=True)
     
-    reservation_status = db.Column(db.String(30), nullable=False, default='Confirmed')  # Confirmed, Held, Cancelled
+    reservation_status = db.Column(db.String(30), nullable=False, default='Confirmed', index=True)  # Confirmed, Held, Cancelled
     held_until = db.Column(db.DateTime, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 

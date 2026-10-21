@@ -6,10 +6,10 @@ class Flight(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     flight_number = db.Column(db.String(20), nullable=False, index=True)
-    airline_id = db.Column(db.Integer, db.ForeignKey('airlines.id'), nullable=False)
-    aircraft_id = db.Column(db.Integer, db.ForeignKey('aircraft.id'), nullable=False)
-    origin_airport_id = db.Column(db.Integer, db.ForeignKey('airports.id'), nullable=False)
-    destination_airport_id = db.Column(db.Integer, db.ForeignKey('airports.id'), nullable=False)
+    airline_id = db.Column(db.Integer, db.ForeignKey('airlines.id'), nullable=False, index=True)
+    aircraft_id = db.Column(db.Integer, db.ForeignKey('aircraft.id'), nullable=False, index=True)
+    origin_airport_id = db.Column(db.Integer, db.ForeignKey('airports.id'), nullable=False, index=True)
+    destination_airport_id = db.Column(db.Integer, db.ForeignKey('airports.id'), nullable=False, index=True)
     
     scheduled_departure = db.Column(db.DateTime, nullable=False, index=True)
     scheduled_arrival = db.Column(db.DateTime, nullable=False)
@@ -19,7 +19,7 @@ class Flight(db.Model):
     actual_arrival = db.Column(db.DateTime, nullable=True)
     
     base_fare = db.Column(db.Float, nullable=False, default=4500.0)
-    status = db.Column(db.String(30), nullable=False, default='Scheduled')  # Scheduled, Check-in open, Boarding, Departed, In flight, Arrived, Delayed, Cancelled
+    status = db.Column(db.String(30), nullable=False, default='Scheduled', index=True)  # Scheduled, Check-in open, Boarding, Departed, In flight, Arrived, Delayed, Cancelled
     terminal = db.Column(db.String(20), nullable=True, default='T1')
     gate = db.Column(db.String(20), nullable=True, default='G4')
     baggage_belt = db.Column(db.String(20), nullable=True, default='B2')

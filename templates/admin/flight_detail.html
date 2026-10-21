@@ -1,0 +1,398 @@
+{% extends 'base.html' %}
+
+{% block title %}Flight {{ flight.flight_number }} Control & Manifest - Admin Console{% endblock %}
+
+{% block extra_css %}
+<style>
+  .seat-legend-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 3px;
+    display: inline-block;
+  }
+  .mini-seat-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    max-height: 380px;
+    overflow-y: auto;
+    padding-right: 6px;
+  }
+  .mini-seat-row {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .mini-seat {
+    width: 28px;
+    height: 28px;
+    font-size: 0.68rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    border: 1px solid #CBD5E1;
+  }
+  .mini-seat-male {
+    background-color: #DCEBFF;
+    border-color: #4385E8;
+    color: #0d47a1;
+  }
+  .mini-seat-female {
+    background-color: #FFE0EC;
+    border-color: #E66B9A;
+    color: #880e4f;
+  }
+  .mini-seat-other {
+    background-color: #E2E8F0;
+    border-color: #94A3B8;
+    color: #334155;
+  }
+  .mini-seat-available {
+    background-color: #FFFFFF;
+    border-color: #CBD5E1;
+    color: #64748B;
+  }
+  .mini-seat-restricted {
+    background-color: #F1F5F9;
+    border-color: #CBD5E1;
+    color: #94A3B8;
+    opacity: 0.6;
+  }
+  .mini-seat-aisle {
+    width: 14px;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper">
+  <!-- Admin Sidebar -->
+  <aside class="dashboard-sidebar">
+    <div class="sidebar-header">
+      <span class="fw-bold text-white small text-uppercase letter-spacing-1">
+        <i class="bi bi-shield-lock-fill text-warning me-2"></i>Admin Console
+      </span>
+    </div>
+    <ul class="sidebar-menu">
+      <li class="sidebar-item"><a href="{{ url_for('admin.dashboard') }}" class="sidebar-link"><i class="bi bi-speedometer2"></i>Overview</a></li>
+      <li class="sidebar-section-title">Aviation Management</li>
+      <li class="sidebar-item"><a href="{{ url_for('admin.airports') }}" class="sidebar-link"><i class="bi bi-building"></i>Airports</a></li>
+      <li class="sidebar-item"><a href="{{ url_for('admin.flights') }}" class="sidebar-link active"><i class="bi bi-airplane"></i>Flights &amp; Schedules</a></li>
+      <li class="sidebar-item"><a href="{{ url_for('admin.fleet') }}" class="sidebar-link"><i class="bi bi-grid-3x3"></i>Fleet &amp; Seats</a></li>
+      <li class="sidebar-section-title">Passenger Operations</li>
+      <li class="sidebar-item"><a href="{{ url_for('admin.bookings') }}" class="sidebar-link"><i class="bi bi-ticket-perforated"></i>Bookings</a></li>
+      <li class="sidebar-item"><a href="{{ url_for('admin.users') }}" class="sidebar-link"><i class="bi bi-people"></i>Passengers</a></li>
+      <li class="sidebar-section-title">Monitoring &amp; Audit</li>
+      <li class="sidebar-item"><a href="{{ url_for('admin.analytics') }}" class="sidebar-link"><i class="bi bi-bar-chart-line"></i>Analytics</a></li>
+      <li class="sidebar-item"><a href="{{ url_for('admin.audit_logs') }}" class="sidebar-link"><i class="bi bi-journal-text"></i>Audit Logs</a></li>
+      <li class="sidebar-item"><a href="{{ url_for('admin.settings') }}" class="sidebar-link"><i class="bi bi-gear"></i>Settings</a></li>
+    </ul>
+  </aside>
+
+  <!-- Main Content -->
+  <div class="dashboard-main">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-3">
+      <ol class="breadcrumb small">
+        <li class="breadcrumb-item"><a href="{{ url_for('admin.dashboard') }}">Admin</a></li>
+        <li class="breadcrumb-item"><a href="{{ url_for('admin.flights') }}">Flights</a></li>
+        <li class="breadcrumb-item active" aria-current="page">{{ flight.flight_number }} Control</li>
+      </ol>
+    </nav>
+
+    <!-- Flight Header Banner -->
+    <div class="aviation-card p-4 mb-4">
+      <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
+        <div>
+          <div class="d-flex align-items-center gap-2 mb-2 flex-wrap">
+            <span class="badge bg-dark font-monospace fs-5 px-3 py-2">{{ flight.flight_number }}</span>
+            <span class="badge bg-primary fs-6">{{ flight.airline.name }} ({{ flight.airline.code }})</span>
+            <span class="badge 
+              {% if flight.status == 'Delayed' %}bg-warning text-dark
+              {% elif flight.status == 'Cancelled' %}bg-danger
+              {% elif flight.status in ['Boarding', 'In flight', 'Departed'] %}bg-primary
+              {% elif flight.status == 'Arrived' %}bg-success
+              {% else %}bg-secondary{% endif %} fs-6">
+              {{ flight.status }}
+            </span>
+            <span class="badge bg-light text-dark border">Aircraft: {{ flight.aircraft.model }} ({{ flight.aircraft.registration }})</span>
+          </div>
+
+          <h3 class="fw-bold text-navy mb-1">
+            {{ flight.origin_airport.city }} ({{ flight.origin_airport.iata_code or flight.origin_airport.icao_code }})
+            <i class="bi bi-arrow-right text-primary mx-2"></i>
+            {{ flight.destination_airport.city }} ({{ flight.destination_airport.iata_code or flight.destination_airport.icao_code }})
+          </h3>
+          <p class="text-muted small mb-0">
+            <i class="bi bi-calendar-event me-1"></i>Scheduled: <strong>{{ flight.scheduled_departure|datetime }}</strong> &rarr; <strong>{{ flight.scheduled_arrival|datetime }}</strong> ({{ flight.duration_formatted }})
+          </p>
+        </div>
+
+        <div class="d-flex gap-2 align-items-center flex-wrap">
+          <a href="{{ url_for('flights.track_flight', flight_id=flight.id) }}" class="btn btn-outline-primary btn-sm" target="_blank">
+            <i class="bi bi-broadcast me-1"></i>Live Radar Track
+          </a>
+          <a href="{{ url_for('seats.seat_selection', flight_id=flight.id) }}" class="btn btn-outline-secondary btn-sm" target="_blank">
+            <i class="bi bi-grid-3x3 me-1"></i>Passenger Seat View
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- KPI Metric Cards -->
+    <div class="row g-3 mb-4">
+      <div class="col-6 col-md-3">
+        <div class="metric-card metric-card-accent-blue p-3">
+          <span class="metric-title">Occupancy Rate</span>
+          <h3 class="metric-val">{{ stats.occupancy_pct }}%</h3>
+          <small class="text-muted">{{ stats.confirmed_seats }} of {{ stats.total_capacity }} seats booked</small>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="metric-card metric-card-accent-green p-3">
+          <span class="metric-title">Available Seats</span>
+          <h3 class="metric-val">{{ stats.available_seats }}</h3>
+          <small class="text-success"><i class="bi bi-check-circle me-1"></i>Open for booking</small>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="metric-card metric-card-accent-cyan p-3">
+          <span class="metric-title">Total Flight Revenue</span>
+          <h3 class="metric-val">{{ stats.total_revenue|currency }}</h3>
+          <small class="text-muted">Base Fare: {{ flight.base_fare|currency }}</small>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="metric-card metric-card-accent-amber p-3">
+          <span class="metric-title">Gender Distribution</span>
+          <div class="d-flex gap-2 mt-2">
+            <span class="badge" style="background-color: #DCEBFF; color: #0d47a1; border: 1px solid #4385E8;" title="Male Passengers">
+              <i class="bi bi-gender-male"></i> {{ stats.male_count }}
+            </span>
+            <span class="badge" style="background-color: #FFE0EC; color: #880e4f; border: 1px solid #E66B9A;" title="Female Passengers">
+              <i class="bi bi-gender-female"></i> {{ stats.female_count }}
+            </span>
+            <span class="badge bg-light text-muted border" title="Undisclosed">
+              <i class="bi bi-dash"></i> {{ stats.other_count }}
+            </span>
+          </div>
+          <small class="text-muted d-block mt-1">Cancellations: {{ stats.cancelled_seats }}</small>
+        </div>
+      </div>
+    </div>
+
+    <!-- Operations Control & Seat Map Grid -->
+    <div class="row g-4 mb-4">
+      <!-- Operational Controls Form -->
+      <div class="col-lg-5">
+        <div class="aviation-card p-4 h-100">
+          <h6 class="fw-bold text-navy mb-3"><i class="bi bi-sliders me-2 text-primary"></i>Operational Dispatch Control</h6>
+
+          <!-- Status Update -->
+          <form method="POST" action="{{ url_for('admin.update_status', flight_id=flight.id) }}" class="mb-4 pb-3 border-bottom">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="redirect_to" value="detail">
+
+            <label class="form-label small fw-bold text-muted">Flight Status</label>
+            <div class="input-group input-group-sm mb-2">
+              <select name="status" class="form-select">
+                <option value="Scheduled" {% if flight.status == 'Scheduled' %}selected{% endif %}>Scheduled</option>
+                <option value="Check-in open" {% if flight.status == 'Check-in open' %}selected{% endif %}>Check-in open</option>
+                <option value="Boarding" {% if flight.status == 'Boarding' %}selected{% endif %}>Boarding</option>
+                <option value="Departed" {% if flight.status == 'Departed' %}selected{% endif %}>Departed</option>
+                <option value="In flight" {% if flight.status == 'In flight' %}selected{% endif %}>In flight</option>
+                <option value="Arrived" {% if flight.status == 'Arrived' %}selected{% endif %}>Arrived</option>
+                <option value="Delayed" {% if flight.status == 'Delayed' %}selected{% endif %}>Delayed</option>
+                <option value="Cancelled" {% if flight.status == 'Cancelled' %}selected{% endif %}>Cancelled</option>
+              </select>
+              <button type="submit" class="btn btn-aviation-primary">Update Status</button>
+            </div>
+            <input type="text" name="notes" class="form-control form-control-sm" placeholder="Optional status update note...">
+          </form>
+
+          <!-- Gate, Terminal, Belt Update -->
+          <form method="POST" action="{{ url_for('admin.update_operations', flight_id=flight.id) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+            <h6 class="small fw-bold text-navy mb-2">Gate &amp; Terminal Allocation</h6>
+            <div class="row g-2 mb-3">
+              <div class="col-4">
+                <label class="form-label small text-muted mb-1">Terminal</label>
+                <input type="text" name="terminal" class="form-control form-control-sm" value="{{ flight.terminal or 'T1' }}">
+              </div>
+              <div class="col-4">
+                <label class="form-label small text-muted mb-1">Departure Gate</label>
+                <input type="text" name="gate" class="form-control form-control-sm" value="{{ flight.gate or 'G1' }}">
+              </div>
+              <div class="col-4">
+                <label class="form-label small text-muted mb-1">Baggage Belt</label>
+                <input type="text" name="baggage_belt" class="form-control form-control-sm" value="{{ flight.baggage_belt or 'B1' }}">
+              </div>
+            </div>
+            <button type="submit" class="btn btn-outline-primary btn-sm w-100">
+              <i class="bi bi-save me-1"></i>Save Operational Allocations
+            </button>
+          </form>
+
+          <!-- Status History Log -->
+          <div class="mt-4 pt-3 border-top">
+            <h6 class="small fw-bold text-navy mb-2"><i class="bi bi-clock-history me-1 text-primary"></i>Recent Status Changes</h6>
+            {% if history %}
+              <div style="max-height: 160px; overflow-y: auto;" class="small">
+                {% for h in history %}
+                  <div class="mb-2 pb-1 border-bottom">
+                    <span class="badge bg-light text-dark border">{{ h.new_status }}</span>
+                    <span class="text-muted" style="font-size: 0.72rem;">{{ h.event_timestamp|datetime }}</span>
+                    <div class="text-muted" style="font-size: 0.72rem;">{{ h.notes or 'Operational update' }}</div>
+                  </div>
+                {% endfor %}
+              </div>
+            {% else %}
+              <p class="text-muted small">No operational status changes logged.</p>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <!-- Live Cabin Occupancy Grid -->
+      <div class="col-lg-7">
+        <div class="aviation-card p-4 h-100">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h6 class="fw-bold text-navy m-0"><i class="bi bi-grid-3x3 me-2 text-primary"></i>Live Cabin Seat Occupancy</h6>
+            <div class="d-flex gap-2 align-items-center small">
+              <span><span class="seat-legend-dot mini-seat-male me-1"></span>Male</span>
+              <span><span class="seat-legend-dot mini-seat-female me-1"></span>Female</span>
+              <span><span class="seat-legend-dot mini-seat-available me-1"></span>Available</span>
+            </div>
+          </div>
+
+          {% if seat_map and seat_map.rows %}
+            <div class="mini-seat-grid border p-3 rounded-3 bg-light">
+              {% for row in seat_map.rows %}
+                <div class="mini-seat-row justify-content-center">
+                  <span class="text-muted small me-2" style="width: 20px; text-align: right; font-size: 0.65rem;">{{ row.row_number }}</span>
+                  {% for s in row.seats %}
+                    {% if loop.index == 4 and seat_map.layout_type == '3-3' %}
+                      <div class="mini-seat-aisle"></div>
+                    {% elif loop.index == 3 and seat_map.layout_type == '2-2' %}
+                      <div class="mini-seat-aisle"></div>
+                    {% endif %}
+
+                    <div class="mini-seat 
+                      {% if s.gender_color == 'male' %}mini-seat-male
+                      {% elif s.gender_color == 'female' %}mini-seat-female
+                      {% elif s.gender_color == 'other' %}mini-seat-other
+                      {% elif s.gender_color == 'restricted' %}mini-seat-restricted
+                      {% else %}mini-seat-available{% endif %}"
+                      title="Seat {{ s.seat_code }} ({{ s.cabin_class }}): {{ s.state|capitalize }}{% if s.gender_color in ['male','female'] %} - {{ s.gender_color|capitalize }}{% endif %}">
+                      {{ s.letter }}
+                    </div>
+                  {% endfor %}
+                </div>
+              {% endfor %}
+            </div>
+          {% else %}
+            <p class="text-muted small">Seat configuration not available for this aircraft.</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Passenger Manifest Table -->
+    <div class="aviation-card overflow-hidden">
+      <div class="p-3 bg-white border-bottom d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <h6 class="fw-bold text-navy m-0">
+          <i class="bi bi-person-lines-fill me-2 text-primary"></i>Passenger Manifest ({{ manifest|length }} Booked Passengers)
+        </h6>
+        <div>
+          <input type="text" id="manifestSearch" class="form-control form-control-sm" placeholder="Filter passenger or seat..." style="width: 220px;">
+        </div>
+      </div>
+
+      <div class="table-responsive">
+        <table class="table aviation-table mb-0" id="manifestTable">
+          <thead>
+            <tr>
+              <th>Seat</th>
+              <th>Passenger Name</th>
+              <th>Gender</th>
+              <th>Age</th>
+              <th>Cabin</th>
+              <th>Booking Ref</th>
+              <th>Account Email</th>
+              <th>Fare Paid</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for p in manifest %}
+              <tr>
+                <td><strong class="font-monospace text-primary fs-6">{{ p.seat_code }}</strong></td>
+                <td><strong class="text-navy">{{ p.passenger_name }}</strong></td>
+                <td>
+                  {% if p.gender == 'Male' %}
+                    <span class="badge" style="background-color: #DCEBFF; color: #0d47a1; border: 1px solid #4385E8;">
+                      <i class="bi bi-gender-male me-1"></i>Male
+                    </span>
+                  {% elif p.gender == 'Female' %}
+                    <span class="badge" style="background-color: #FFE0EC; color: #880e4f; border: 1px solid #E66B9A;">
+                      <i class="bi bi-gender-female me-1"></i>Female
+                    </span>
+                  {% else %}
+                    <span class="badge bg-light text-muted border">Undisclosed</span>
+                  {% endif %}
+                </td>
+                <td>{{ p.age }}</td>
+                <td><span class="badge bg-light text-dark border">{{ p.cabin_class }}</span></td>
+                <td>
+                  {% if p.booking_id %}
+                    <a href="{{ url_for('bookings.booking_details', booking_id=p.booking_id) }}" class="font-monospace fw-bold text-decoration-none" target="_blank">
+                      {{ p.booking_ref }}
+                    </a>
+                  {% else %}
+                    <span class="font-monospace text-muted">{{ p.booking_ref }}</span>
+                  {% endif %}
+                </td>
+                <td><small class="text-muted">{{ p.user_email }}</small></td>
+                <td><strong>{{ p.fare|currency }}</strong></td>
+                <td>
+                  <span class="badge {% if p.status == 'Confirmed' %}bg-success{% else %}bg-danger{% endif %}">
+                    {{ p.status }}
+                  </span>
+                </td>
+              </tr>
+            {% else %}
+              <tr>
+                <td colspan="9" class="text-center py-4 text-muted">
+                  <i class="bi bi-info-circle me-1"></i>No passenger bookings registered for this flight yet.
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const searchInput = document.getElementById('manifestSearch');
+    const table = document.getElementById('manifestTable');
+    if (!searchInput || !table) return;
+
+    searchInput.addEventListener('keyup', function () {
+      const q = this.value.toLowerCase();
+      const rows = table.querySelectorAll('tbody tr');
+      rows.forEach(row => {
+        const text = row.innerText.toLowerCase();
+        row.style.display = text.includes(q) ? '' : 'none';
+      });
+    });
+  });
+</script>
+{% endblock %}

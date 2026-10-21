@@ -42,18 +42,54 @@
     <!-- Filters -->
     <div class="aviation-card p-3 mb-4">
       <form method="GET" action="{{ url_for('admin.flights') }}" class="row g-2 align-items-end">
-        <div class="col-md-5">
-          <label class="form-label small fw-bold text-muted">Search Flight Number</label>
+        <div class="col-md-3">
+          <label class="form-label small fw-bold text-muted">Flight Number</label>
           <div class="input-group input-group-sm">
             <span class="input-group-text bg-light"><i class="bi bi-search"></i></span>
             <input type="text" name="search" class="form-control" placeholder="e.g. AI-101..." value="{{ search }}">
           </div>
         </div>
 
-        <div class="col-md-4">
+        <div class="col-md-2">
+          <label class="form-label small fw-bold text-muted">Origin Airport</label>
+          <select name="origin_id" class="form-select form-select-sm" onchange="this.form.submit()">
+            <option value="">All Indian Hubs</option>
+            {% for a in airports %}
+              <option value="{{ a.id }}" {% if origin_id == a.id %}selected{% endif %}>
+                {{ a.city }} ({{ a.iata_code or a.icao_code }})
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="col-md-2">
+          <label class="form-label small fw-bold text-muted">Destination</label>
+          <select name="dest_id" class="form-select form-select-sm" onchange="this.form.submit()">
+            <option value="">All Destinations</option>
+            {% for a in airports %}
+              <option value="{{ a.id }}" {% if dest_id == a.id %}selected{% endif %}>
+                {{ a.city }} ({{ a.iata_code or a.icao_code }})
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="col-md-2">
+          <label class="form-label small fw-bold text-muted">Airline</label>
+          <select name="airline_id" class="form-select form-select-sm" onchange="this.form.submit()">
+            <option value="">All Airlines</option>
+            {% for al in airlines %}
+              <option value="{{ al.id }}" {% if airline_id == al.id %}selected{% endif %}>
+                {{ al.name }}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="col-md-2">
           <label class="form-label small fw-bold text-muted">Status</label>
           <select name="status" class="form-select form-select-sm" onchange="this.form.submit()">
-            <option value="All" {% if status == 'All' %}selected{% endif %}>All Operational Statuses</option>
+            <option value="All" {% if status == 'All' %}selected{% endif %}>All Statuses</option>
             <option value="Scheduled" {% if status == 'Scheduled' %}selected{% endif %}>Scheduled</option>
             <option value="Check-in open" {% if status == 'Check-in open' %}selected{% endif %}>Check-in open</option>
             <option value="Boarding" {% if status == 'Boarding' %}selected{% endif %}>Boarding</option>
@@ -65,7 +101,7 @@
           </select>
         </div>
 
-        <div class="col-md-3">
+        <div class="col-md-1">
           <button type="submit" class="btn btn-outline-primary btn-sm w-100">Filter</button>
         </div>
       </form>
@@ -82,19 +118,39 @@
               <th>Route</th>
               <th>Departure Time</th>
               <th>Aircraft</th>
+              <th>Occupancy</th>
               <th>Status</th>
-              <th>Fare</th>
-              <th class="text-end">Update Status</th>
+              <th>Base Fare</th>
+              <th class="text-end">Actions</th>
             </tr>
           </thead>
           <tbody>
             {% for f in flights %}
+              {% set cap = f.aircraft.seat_capacity if f.aircraft else 180 %}
+              {% set avail = f.available_seats_count %}
+              {% set booked = cap - avail %}
               <tr>
-                <td><strong class="font-monospace text-navy">{{ f.flight_number }}</strong></td>
+                <td>
+                  <a href="{{ url_for('admin.flight_detail', flight_id=f.id) }}" class="font-monospace fw-bold text-navy text-decoration-none">
+                    {{ f.flight_number }}
+                  </a>
+                </td>
                 <td>{{ f.airline.name }}</td>
-                <td>{{ f.origin_airport.city }} &rarr; {{ f.destination_airport.city }}</td>
-                <td>{{ f.scheduled_departure|datetime }}</td>
-                <td><small class="text-muted">{{ f.aircraft.model }} ({{ f.aircraft.registration }})</small></td>
+                <td>
+                  <span class="badge bg-light text-dark border">{{ f.origin_airport.iata_code or f.origin_airport.city }}</span>
+                  <i class="bi bi-arrow-right text-primary mx-1"></i>
+                  <span class="badge bg-light text-dark border">{{ f.destination_airport.iata_code or f.destination_airport.city }}</span>
+                </td>
+                <td><small>{{ f.scheduled_departure|datetime }}</small></td>
+                <td><small class="text-muted">{{ f.aircraft.model }}</small></td>
+                <td>
+                  <div class="d-flex align-items-center gap-1" style="min-width: 90px;">
+                    <span class="small fw-bold text-navy">{{ booked }}/{{ cap }}</span>
+                    <span class="badge {% if booked > cap * 0.7 %}bg-success{% elif booked > cap * 0.3 %}bg-primary{% else %}bg-secondary{% endif %}" style="font-size: 0.65rem;">
+                      {{ ((booked / cap) * 100)|round|int }}%
+                    </span>
+                  </div>
+                </td>
                 <td>
                   <span class="badge 
                     {% if f.status == 'Delayed' %}bg-warning text-dark
@@ -107,23 +163,28 @@
                 </td>
                 <td><strong>{{ f.base_fare|currency }}</strong></td>
                 <td class="text-end">
-                  <!-- Quick Status Update Dropdown Form -->
-                  <form method="POST" action="{{ url_for('admin.update_status', flight_id=f.id) }}" class="d-inline-flex gap-1 align-items-center">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                    <select name="status" class="form-select form-select-sm" style="width: 125px;">
-                      <option value="Scheduled" {% if f.status == 'Scheduled' %}selected{% endif %}>Scheduled</option>
-                      <option value="Check-in open" {% if f.status == 'Check-in open' %}selected{% endif %}>Check-in</option>
-                      <option value="Boarding" {% if f.status == 'Boarding' %}selected{% endif %}>Boarding</option>
-                      <option value="Departed" {% if f.status == 'Departed' %}selected{% endif %}>Departed</option>
-                      <option value="In flight" {% if f.status == 'In flight' %}selected{% endif %}>In Flight</option>
-                      <option value="Arrived" {% if f.status == 'Arrived' %}selected{% endif %}>Arrived</option>
-                      <option value="Delayed" {% if f.status == 'Delayed' %}selected{% endif %}>Delayed</option>
-                      <option value="Cancelled" {% if f.status == 'Cancelled' %}selected{% endif %}>Cancelled</option>
-                    </select>
-                    <button type="submit" class="btn btn-sm btn-outline-primary" title="Update Status">
-                      <i class="bi bi-arrow-repeat"></i>
-                    </button>
-                  </form>
+                  <div class="d-inline-flex gap-1 align-items-center">
+                    <a href="{{ url_for('admin.flight_detail', flight_id=f.id) }}" class="btn btn-sm btn-outline-primary" title="Flight Control & Passenger Manifest">
+                      <i class="bi bi-person-lines-fill"></i> Manifest
+                    </a>
+                    <a href="{{ url_for('flights.track_flight', flight_id=f.id) }}" class="btn btn-sm btn-outline-secondary" title="Radar Track" target="_blank">
+                      <i class="bi bi-broadcast"></i>
+                    </a>
+                    <!-- Quick Status Update Dropdown Form -->
+                    <form method="POST" action="{{ url_for('admin.update_status', flight_id=f.id) }}" class="d-inline-flex gap-1">
+                      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                      <select name="status" class="form-select form-select-sm" style="width: 105px;" onchange="this.form.submit()">
+                        <option value="Scheduled" {% if f.status == 'Scheduled' %}selected{% endif %}>Scheduled</option>
+                        <option value="Check-in open" {% if f.status == 'Check-in open' %}selected{% endif %}>Check-in</option>
+                        <option value="Boarding" {% if f.status == 'Boarding' %}selected{% endif %}>Boarding</option>
+                        <option value="Departed" {% if f.status == 'Departed' %}selected{% endif %}>Departed</option>
+                        <option value="In flight" {% if f.status == 'In flight' %}selected{% endif %}>In Flight</option>
+                        <option value="Arrived" {% if f.status == 'Arrived' %}selected{% endif %}>Arrived</option>
+                        <option value="Delayed" {% if f.status == 'Delayed' %}selected{% endif %}>Delayed</option>
+                        <option value="Cancelled" {% if f.status == 'Cancelled' %}selected{% endif %}>Cancelled</option>
+                      </select>
+                    </form>
+                  </div>
                 </td>
               </tr>
             {% endfor %}

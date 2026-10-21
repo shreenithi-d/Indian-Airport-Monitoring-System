@@ -33,6 +33,7 @@ def dashboard():
     total_passengers = User.query.filter_by(role='passenger').count()
     total_aircraft = Aircraft.query.count()
     delayed_flights = Flight.query.filter_by(status='Delayed').count()
+    total_revenue = db.session.query(db.func.sum(Booking.total_amount)).filter_by(booking_status='Confirmed').scalar() or 0.0
     
     # Recent bookings
     recent_bookings = Booking.query.order_by(Booking.created_at.desc()).limit(6).all()
@@ -42,11 +43,12 @@ def dashboard():
     stats = {
         'total_airports': total_airports,
         'total_flights': total_flights,
-        'active_bookings': active_bookings,
-        'cancelled_bookings': cancelled_bookings,
-        'total_passengers': total_passengers,
+        'active_bookings': f"{active_bookings:,}",
+        'cancelled_bookings': f"{cancelled_bookings:,}",
+        'total_passengers': f"{total_passengers:,}",
         'total_aircraft': total_aircraft,
-        'delayed_flights': delayed_flights
+        'delayed_flights': delayed_flights,
+        'total_revenue': round(total_revenue, 2)
     }
 
     return render_template('admin/dashboard.html', stats=stats, recent_bookings=recent_bookings, recent_logs=recent_logs)
@@ -179,6 +181,9 @@ def import_csv():
 def flights():
     search = request.args.get('search', '').strip()
     status = request.args.get('status', 'All')
+    origin_id = request.args.get('origin_id', type=int)
+    dest_id = request.args.get('dest_id', type=int)
+    airline_id = request.args.get('airline_id', type=int)
     page = request.args.get('page', 1, type=int)
 
     query = Flight.query
@@ -186,9 +191,112 @@ def flights():
         query = query.filter(Flight.flight_number.ilike(f"%{search}%"))
     if status != 'All':
         query = query.filter_by(status=status)
+    if origin_id:
+        query = query.filter_by(origin_airport_id=origin_id)
+    if dest_id:
+        query = query.filter_by(destination_airport_id=dest_id)
+    if airline_id:
+        query = query.filter_by(airline_id=airline_id)
 
     pagination = query.order_by(Flight.scheduled_departure.desc()).paginate(page=page, per_page=15, error_out=False)
-    return render_template('admin/flights.html', pagination=pagination, flights=pagination.items, search=search, status=status)
+    
+    all_airports = Airport.query.filter_by(operational_status='Operational').order_by(Airport.city.asc()).all()
+    all_airlines = Airline.query.order_by(Airline.name.asc()).all()
+
+    return render_template(
+        'admin/flights.html',
+        pagination=pagination,
+        flights=pagination.items,
+        search=search,
+        status=status,
+        origin_id=origin_id,
+        dest_id=dest_id,
+        airline_id=airline_id,
+        airports=all_airports,
+        airlines=all_airlines
+    )
+
+@admin_bp.route('/flights/<int:flight_id>')
+@admin_required
+def flight_detail(flight_id):
+    from services.seat_service import get_flight_seat_map
+    flight = Flight.query.get_or_404(flight_id)
+    
+    # Get passengers and seat reservations for this flight
+    reservations = SeatReservation.query.filter_by(flight_id=flight.id).all()
+    
+    # Manifest data
+    manifest = []
+    male_count = 0
+    female_count = 0
+    other_count = 0
+    total_revenue = 0.0
+    confirmed_seats = 0
+    cancelled_seats = 0
+
+    for r in reservations:
+        pax = r.passenger
+        booking = r.booking
+        status = r.reservation_status
+        if status == 'Confirmed':
+            confirmed_seats += 1
+            if pax:
+                if pax.gender_selection == 'Male':
+                    male_count += 1
+                elif pax.gender_selection == 'Female':
+                    female_count += 1
+                else:
+                    other_count += 1
+            if booking:
+                # Share of booking total
+                per_pax_fare = (booking.total_amount / max(1, booking.passenger_count))
+                total_revenue += per_pax_fare
+        elif status == 'Cancelled':
+            cancelled_seats += 1
+
+        manifest.append({
+            'reservation_id': r.id,
+            'seat_code': r.seat.seat_code if r.seat else (pax.seat_number if pax else '—'),
+            'cabin_class': r.seat.cabin_class if r.seat else 'Economy',
+            'passenger_name': pax.full_name if pax else 'Unknown',
+            'gender': pax.gender_selection if pax else 'Prefer not to say',
+            'age': pax.age if pax else '—',
+            'booking_ref': booking.booking_reference if booking else '—',
+            'booking_id': booking.id if booking else None,
+            'user_email': booking.user.email if (booking and booking.user) else '—',
+            'status': status,
+            'fare': round((booking.total_amount / max(1, booking.passenger_count)), 2) if booking else flight.base_fare
+        })
+
+    # Sort manifest by seat code
+    manifest.sort(key=lambda x: (x['seat_code'][:2].isdigit(), int(x['seat_code'][:-1]) if x['seat_code'][:-1].isdigit() else 999, x['seat_code'][-1:]))
+
+    total_capacity = flight.aircraft.seat_capacity if flight.aircraft else 180
+    occupancy_pct = round((confirmed_seats / max(1, total_capacity)) * 100, 1)
+
+    seat_map_data = get_flight_seat_map(flight.id)
+    history = flight.status_history.all()
+
+    stats = {
+        'total_capacity': total_capacity,
+        'confirmed_seats': confirmed_seats,
+        'available_seats': max(0, total_capacity - confirmed_seats),
+        'cancelled_seats': cancelled_seats,
+        'occupancy_pct': occupancy_pct,
+        'total_revenue': round(total_revenue, 2),
+        'male_count': male_count,
+        'female_count': female_count,
+        'other_count': other_count
+    }
+
+    return render_template(
+        'admin/flight_detail.html',
+        flight=flight,
+        manifest=manifest,
+        stats=stats,
+        seat_map=seat_map_data,
+        history=history
+    )
 
 @admin_bp.route('/flights/add', methods=['GET', 'POST'])
 @admin_required
@@ -217,7 +325,37 @@ def update_status(flight_id):
         flash(f"Status for {flight.flight_number} updated to '{new_status}'.", "success")
     else:
         flash(msg, "danger")
+    
+    # Check redirect destination
+    redirect_to = request.form.get('redirect_to')
+    if redirect_to == 'detail':
+        return redirect(url_for('admin.flight_detail', flight_id=flight_id))
     return redirect(url_for('admin.flights'))
+
+@admin_bp.route('/flights/<int:flight_id>/operations', methods=['POST'])
+@admin_required
+def update_operations(flight_id):
+    flight = Flight.query.get_or_404(flight_id)
+    terminal = request.form.get('terminal', flight.terminal).strip()
+    gate = request.form.get('gate', flight.gate).strip()
+    baggage_belt = request.form.get('baggage_belt', flight.baggage_belt).strip()
+    
+    old_details = f"T:{flight.terminal}, G:{flight.gate}, B:{flight.baggage_belt}"
+    flight.terminal = terminal
+    flight.gate = gate
+    flight.baggage_belt = baggage_belt
+    flight.updated_at = datetime.utcnow()
+    
+    audit = AuditLog(
+        action='UPDATE_FLIGHT_OPERATIONS',
+        entity_type='Flight',
+        entity_id=flight.id,
+        notes=f"Updated flight {flight.flight_number} operations from ({old_details}) to (T:{terminal}, G:{gate}, B:{baggage_belt})"
+    )
+    db.session.add(audit)
+    db.session.commit()
+    flash(f"Flight {flight.flight_number} operational allocations updated successfully.", "success")
+    return redirect(url_for('admin.flight_detail', flight_id=flight_id))
 
 # --- Aircraft & Fleet ---
 @admin_bp.route('/aircraft')
@@ -273,7 +411,7 @@ def users():
     if role != 'All':
         query = query.filter_by(role=role)
 
-    pagination = query.order_by(User.created_at.desc()).paginate(page=page, per_page=15, error_out=False)
+    pagination = query.order_by(User.id.desc()).paginate(page=page, per_page=15, error_out=False)
     return render_template('admin/users.html', pagination=pagination, users=pagination.items, search=search, role=role)
 
 @admin_bp.route('/users/<int:user_id>/toggle-status', methods=['POST'])

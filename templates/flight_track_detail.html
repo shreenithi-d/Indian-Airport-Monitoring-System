@@ -1,53 +1,308 @@
 {% extends 'base.html' %}
 
-{% block title %}Tracking Flight {{ flight.flight_number }} - {{ app_name }}{% endblock %}
+{% block title %}Radar Track {{ flight.flight_number }} ({{ flight.origin_airport.city }} &rarr; {{ flight.destination_airport.city }}) - {{ app_name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  .telemetry-card {
+    background: #0B1739;
+    color: #FFFFFF;
+    border-radius: 12px;
+    padding: 1.25rem;
+    box-shadow: 0 8px 24px rgba(11, 23, 57, 0.15);
+  }
+  .telemetry-label {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #94A3B8;
+  }
+  .telemetry-value {
+    font-family: 'SF Mono', 'Segoe UI Mono', monospace;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #42D9F5;
+  }
+  .telemetry-unit {
+    font-size: 0.75rem;
+    color: #CBD5E1;
+    font-weight: 400;
+  }
+  .flight-progress-track {
+    height: 8px;
+    background: #E2E8F0;
+    border-radius: 4px;
+    position: relative;
+    overflow: visible;
+  }
+  .flight-progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #1769FF 0%, #42D9F5 100%);
+    border-radius: 4px;
+    transition: width 1s ease-in-out;
+  }
+  .flight-plane-cursor {
+    position: absolute;
+    top: -10px;
+    transform: translateX(-50%);
+    font-size: 1.25rem;
+    color: #1769FF;
+    filter: drop-shadow(0 2px 4px rgba(23, 105, 255, 0.4));
+  }
+  .radar-plane-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    background: #1769FF;
+    color: #FFFFFF;
+    border-radius: 50%;
+    border: 3px solid #FFFFFF;
+    box-shadow: 0 0 15px rgba(23, 105, 255, 0.7);
+    animation: radar-pulse 2s infinite;
+  }
+  @keyframes radar-pulse {
+    0% {
+      box-shadow: 0 0 0 0 rgba(66, 217, 245, 0.7);
+    }
+    70% {
+      box-shadow: 0 0 0 18px rgba(66, 217, 245, 0);
+    }
+    100% {
+      box-shadow: 0 0 0 0 rgba(66, 217, 245, 0);
+    }
+  }
+  .weather-pill {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 8px;
+    padding: 0.5rem 0.75rem;
+  }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="container py-4">
+<div class="container-fluid px-lg-5 py-4">
   <!-- Breadcrumb -->
   <nav aria-label="breadcrumb" class="mb-3">
     <ol class="breadcrumb small">
       <li class="breadcrumb-item"><a href="{{ url_for('main.landing') }}">Home</a></li>
-      <li class="breadcrumb-item"><a href="{{ url_for('flights.track_search') }}">Flight Tracking</a></li>
-      <li class="breadcrumb-item active" aria-current="page">{{ flight.flight_number }}</li>
+      <li class="breadcrumb-item"><a href="{{ url_for('flights.track_search') }}">Flight Radar</a></li>
+      <li class="breadcrumb-item active" aria-current="page">{{ flight.flight_number }} Tracking</li>
     </ol>
   </nav>
 
-  <!-- Flight Status Banner -->
+  <!-- Flight Header Operations Banner -->
   <div class="aviation-card p-4 mb-4">
-    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center">
+    <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
       <div>
-        <div class="d-flex align-items-center gap-2 mb-2">
-          <span class="badge bg-dark font-monospace fs-6">{{ flight.flight_number }}</span>
-          <span class="badge bg-primary">{{ flight.airline.name }}</span>
+        <div class="d-flex align-items-center gap-2 mb-2 flex-wrap">
+          <span class="badge bg-dark font-monospace fs-5 px-3 py-2">{{ flight.flight_number }}</span>
+          <span class="badge bg-primary fs-6">{{ flight.airline.name }}</span>
           <span class="badge 
             {% if flight.status == 'Delayed' %}bg-warning text-dark
             {% elif flight.status == 'Cancelled' %}bg-danger
             {% elif flight.status in ['Boarding', 'In flight', 'Departed'] %}bg-primary
             {% elif flight.status == 'Arrived' %}bg-success
-            {% else %}bg-secondary{% endif %}">
-            {{ flight.status }}
+            {% else %}bg-secondary{% endif %} fs-6">
+            <i class="bi bi-record-circle-fill me-1"></i>{{ flight.status }}
+          </span>
+          <span class="badge bg-light text-dark border">
+            <i class="bi bi-airplane me-1"></i>{{ flight.aircraft.model }} ({{ flight.aircraft.registration }})
           </span>
         </div>
-        <h3 class="fw-bold text-navy mb-0">
-          {{ flight.origin_airport.city }} 
-          <i class="bi bi-arrow-right text-primary mx-1"></i> 
-          {{ flight.destination_airport.city }}
-        </h3>
+
+        <div class="d-flex align-items-baseline gap-3 flex-wrap">
+          <h2 class="fw-bold text-navy mb-0">
+            {{ flight.origin_airport.city }} 
+            <span class="badge bg-secondary font-monospace fs-6">{{ flight.origin_airport.iata_code or flight.origin_airport.icao_code }}</span>
+            <i class="bi bi-arrow-right text-primary mx-2"></i>
+            {{ flight.destination_airport.city }}
+            <span class="badge bg-secondary font-monospace fs-6">{{ flight.destination_airport.iata_code or flight.destination_airport.icao_code }}</span>
+          </h2>
+        </div>
       </div>
 
-      <div class="mt-3 mt-md-0 text-md-end">
-        <span class="text-muted small d-block">Aircraft Deployment</span>
-        <strong class="text-navy fs-6">{{ flight.aircraft.model }} ({{ flight.aircraft.registration }})</strong>
-        <div class="small text-muted">Gate: <strong>{{ flight.gate or 'G1' }}</strong> &bull; Terminal: <strong>{{ flight.terminal or 'T1' }}</strong></div>
+      <div class="d-flex gap-2 align-items-center flex-wrap">
+        <a href="{{ url_for('seats.seat_selection', flight_id=flight.id) }}" class="btn btn-aviation-primary btn-sm">
+          <i class="bi bi-ticket-perforated me-1"></i>Book / View Seats
+        </a>
+        {% if current_user.is_authenticated and current_user.is_admin %}
+          <a href="{{ url_for('admin.flight_detail', flight_id=flight.id) }}" class="btn btn-warning btn-sm text-dark fw-bold">
+            <i class="bi bi-shield-lock me-1"></i>Admin Dispatch
+          </a>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Live Flight Progress Corridor -->
+    <div class="mt-4 pt-3 border-top">
+      <div class="d-flex justify-content-between align-items-center mb-2 small">
+        <div>
+          <strong class="text-navy">{{ flight.origin_airport.name }}</strong>
+          <div class="text-muted">Dep: <strong>{{ flight.scheduled_departure|datetime }}</strong></div>
+        </div>
+        <div class="text-center">
+          <span class="badge bg-primary bg-opacity-10 text-primary border border-primary px-3 py-1 font-monospace" id="liveCountdown">
+            Calculating telemetry...
+          </span>
+          <div class="text-muted small mt-1">Duration: {{ flight.duration_formatted }} &bull; Distance: {{ route_info.distance_km }} km</div>
+        </div>
+        <div class="text-end">
+          <strong class="text-navy">{{ flight.destination_airport.name }}</strong>
+          <div class="text-muted">Arr: <strong>{{ flight.scheduled_arrival|datetime }}</strong></div>
+        </div>
+      </div>
+
+      <!-- Progress Bar -->
+      <div class="flight-progress-track mt-3 mb-2" id="progressTrackContainer">
+        <div class="flight-progress-bar" id="progressBar" style="width: 50%;"></div>
+        <i class="bi bi-airplane-fill flight-plane-cursor" id="planeCursor" style="left: 50%;"></i>
       </div>
     </div>
   </div>
 
-  <!-- Milestone Progression Tracker -->
-  <div class="aviation-card p-4 mb-4">
-    <h5 class="fw-bold text-navy mb-4"><i class="bi bi-clock-history me-2 text-primary"></i>Operational Milestone Timeline</h5>
+  <!-- Telemetry HUD Grid -->
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-md-4 col-xl-2">
+      <div class="telemetry-card">
+        <div class="telemetry-label"><i class="bi bi-speedometer2 me-1"></i>Ground Speed</div>
+        <div class="telemetry-value" id="valSpeed">840 <span class="telemetry-unit">km/h</span></div>
+        <div class="small text-muted" id="valSpeedKts">453 kts</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-4 col-xl-2">
+      <div class="telemetry-card">
+        <div class="telemetry-label"><i class="bi bi-cloud-arrow-up me-1"></i>Altitude</div>
+        <div class="telemetry-value" id="valAltitude">35,000 <span class="telemetry-unit">ft</span></div>
+        <div class="small text-muted" id="valFlightLevel">FL350</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-4 col-xl-2">
+      <div class="telemetry-card">
+        <div class="telemetry-label"><i class="bi bi-compass me-1"></i>Heading</div>
+        <div class="telemetry-value" id="valHeading">194&deg; <span class="telemetry-unit">SSW</span></div>
+        <div class="small text-muted">Direct Flight Corridor</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-4 col-xl-2">
+      <div class="telemetry-card">
+        <div class="telemetry-label"><i class="bi bi-geo me-1"></i>Distance Flown</div>
+        <div class="telemetry-value" id="valDistanceFlown">-- <span class="telemetry-unit">km</span></div>
+        <div class="small text-muted" id="valDistanceRem">-- km remaining</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-4 col-xl-2">
+      <div class="telemetry-card">
+        <div class="telemetry-label"><i class="bi bi-door-open me-1"></i>Gate / Terminal</div>
+        <div class="telemetry-value text-white">{{ flight.terminal or 'T1' }} <span class="telemetry-unit">Gate {{ flight.gate or 'G1' }}</span></div>
+        <div class="small text-muted">Belt: {{ flight.baggage_belt or 'B1' }}</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-4 col-xl-2">
+      <div class="telemetry-card">
+        <div class="telemetry-label"><i class="bi bi-person-check me-1"></i>Seat Load</div>
+        <div class="telemetry-value" style="color: #16A673;">
+          {{ flight.aircraft.seat_capacity - flight.available_seats_count }} <span class="telemetry-unit">/ {{ flight.aircraft.seat_capacity }}</span>
+        </div>
+        <div class="small text-muted">{{ flight.available_seats_count }} seats available</div>
+      </div>
+    </div>
+  </div>
 
+  <!-- Interactive Map & Ground Intelligence -->
+  <div class="row g-4 mb-4">
+    <!-- Leaflet Radar Map -->
+    <div class="col-xl-8">
+      <div class="aviation-card p-3 h-100">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h6 class="fw-bold text-navy m-0">
+            <i class="bi bi-broadcast text-primary me-2"></i>Live Airspace Radar Visualizer
+          </h6>
+          <div class="d-flex gap-2 align-items-center">
+            <span class="badge bg-success bg-opacity-10 text-success border border-success" style="font-size: 0.72rem;">
+              <i class="bi bi-circle-fill text-success me-1" style="font-size: 0.5rem;"></i>ADS-B Feed Active
+            </span>
+            <button class="btn btn-sm btn-outline-secondary" onclick="recenterMap()">
+              <i class="bi bi-arrows-fullscreen"></i> Recenter
+            </button>
+          </div>
+        </div>
+
+        <div id="live-flight-radar-map" style="height: 500px; border-radius: 8px; border: 1px solid #CBD5E1;"></div>
+      </div>
+    </div>
+
+    <!-- Ground Ops & Terminal Intelligence -->
+    <div class="col-xl-4">
+      <div class="d-flex flex-column gap-3 h-100">
+        <!-- Origin Station Details -->
+        <div class="aviation-card p-3">
+          <div class="d-flex justify-content-between align-items-start mb-2">
+            <div>
+              <span class="badge bg-primary font-monospace">{{ flight.origin_airport.iata_code or 'DEP' }}</span>
+              <strong class="text-navy ms-1">{{ flight.origin_airport.city }}</strong>
+              <div class="text-muted small">{{ flight.origin_airport.name }}</div>
+            </div>
+            <div class="text-end">
+              <span class="badge bg-light text-dark border">Terminal {{ flight.terminal or 'T1' }}</span>
+              <div class="text-muted small">Gate: <strong>{{ flight.gate or 'G1' }}</strong></div>
+            </div>
+          </div>
+          <div class="p-2 rounded bg-light d-flex justify-content-between align-items-center small mt-2">
+            <span><i class="bi bi-thermometer-half text-danger me-1"></i>31&deg;C &bull; Clear</span>
+            <span><i class="bi bi-wind text-primary me-1"></i>Wind: 10 kts WNW</span>
+            <span><i class="bi bi-eye text-success me-1"></i>Vis: 10 km</span>
+          </div>
+        </div>
+
+        <!-- Destination Station Details -->
+        <div class="aviation-card p-3">
+          <div class="d-flex justify-content-between align-items-start mb-2">
+            <div>
+              <span class="badge bg-primary font-monospace">{{ flight.destination_airport.iata_code or 'ARR' }}</span>
+              <strong class="text-navy ms-1">{{ flight.destination_airport.city }}</strong>
+              <div class="text-muted small">{{ flight.destination_airport.name }}</div>
+            </div>
+            <div class="text-end">
+              <span class="badge bg-light text-dark border">Baggage Belt: <strong>{{ flight.baggage_belt or 'B1' }}</strong></span>
+              <div class="text-muted small">Terminal {{ flight.terminal or 'T1' }}</div>
+            </div>
+          </div>
+          <div class="p-2 rounded bg-light d-flex justify-content-between align-items-center small mt-2">
+            <span><i class="bi bi-thermometer-half text-danger me-1"></i>28&deg;C &bull; Partly Cloudy</span>
+            <span><i class="bi bi-wind text-primary me-1"></i>Wind: 8 kts S</span>
+            <span><i class="bi bi-eye text-success me-1"></i>Vis: 9 km</span>
+          </div>
+        </div>
+
+        <!-- Recorded Status Log -->
+        <div class="aviation-card p-3 flex-grow-1 overflow-hidden">
+          <h6 class="fw-bold text-navy mb-3"><i class="bi bi-journal-check me-2 text-primary"></i>Operational Events Log</h6>
+          <div style="max-height: 200px; overflow-y: auto;" class="small">
+            {% if history %}
+              {% for item in history %}
+                <div class="mb-2 pb-2 border-bottom">
+                  <div class="d-flex justify-content-between align-items-center">
+                    <strong class="text-navy">{{ item.new_status }}</strong>
+                    <span class="text-muted" style="font-size: 0.72rem;">{{ item.event_timestamp|datetime }}</span>
+                  </div>
+                  <div class="text-muted" style="font-size: 0.72rem;">{{ item.notes or 'Status updated in system.' }}</div>
+                </div>
+              {% endfor %}
+            {% else %}
+              <p class="text-muted small">No operational status transitions logged yet.</p>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Milestone Progression Checklist -->
+  <div class="aviation-card p-4">
+    <h6 class="fw-bold text-navy mb-4"><i class="bi bi-clock-history me-2 text-primary"></i>Operational Milestones Progression</h6>
     <div class="row g-2 text-center">
       {% for m in timeline %}
         <div class="col">
@@ -72,72 +327,163 @@
       {% endfor %}
     </div>
   </div>
-
-  <div class="row g-4">
-    <!-- Map Visualization -->
-    <div class="col-lg-7">
-      <div class="aviation-card p-3 h-100">
-        <h6 class="fw-bold text-navy mb-2"><i class="bi bi-geo-alt me-1 text-primary"></i>Scheduled Corridor Map</h6>
-        <div id="flight-tracking-map" style="height: 360px; border-radius: 8px; border: 1px solid #CBD5E1;"></div>
-      </div>
-    </div>
-
-    <!-- Status Change History Log -->
-    <div class="col-lg-5">
-      <div class="aviation-card p-4 h-100">
-        <h6 class="fw-bold text-navy mb-3"><i class="bi bi-journal-text me-1 text-primary"></i>Recorded Status History</h6>
-
-        {% if history %}
-          <div class="timeline-container border-start ps-3">
-            {% for item in history %}
-              <div class="position-relative mb-3 ps-3">
-                <span class="position-absolute top-0 start-0 translate-middle p-1 bg-primary rounded-circle border border-white" style="width: 10px; height: 10px;"></span>
-                <div class="d-flex justify-content-between align-items-baseline">
-                  <strong class="small text-navy">{{ item.new_status }}</strong>
-                  <small class="text-muted" style="font-size: 0.72rem;">{{ item.event_timestamp|datetime }}</small>
-                </div>
-                <small class="text-muted d-block">{{ item.notes or 'Status updated by operational timetable.' }}</small>
-                <span class="badge bg-light text-dark border" style="font-size: 0.65rem;">Source: {{ item.source }}</span>
-              </div>
-            {% endfor %}
-          </div>
-        {% else %}
-          <p class="text-muted small">No status change events recorded for this flight yet.</p>
-        {% endif %}
-      </div>
-    </div>
-  </div>
 </div>
 {% endblock %}
 
 {% block extra_scripts %}
 <script>
+  let radarMap, flightLine, planeMarker;
+
   document.addEventListener('DOMContentLoaded', function () {
-    const trackMap = L.map('flight-tracking-map', {
-      center: [20.5937, 78.9629],
+    const origLat = {{ flight.origin_airport.latitude }};
+    const origLng = {{ flight.origin_airport.longitude }};
+    const destLat = {{ flight.destination_airport.latitude }};
+    const destLng = {{ flight.destination_airport.longitude }};
+    const status = "{{ flight.status }}";
+    const totalDistance = {{ route_info.distance_km }};
+
+    // Calculate progress fraction based on status
+    let progress = 0.50; // default in flight
+    let speed = 840;
+    let altitude = 35000;
+    let heading = 194;
+
+    if (status === 'Scheduled' || status === 'Check-in open') {
+      progress = 0.02;
+      speed = 0;
+      altitude = 0;
+    } else if (status === 'Boarding') {
+      progress = 0.05;
+      speed = 0;
+      altitude = 0;
+    } else if (status === 'Departed') {
+      progress = 0.18;
+      speed = 520;
+      altitude = 12000;
+    } else if (status === 'In flight') {
+      progress = 0.58;
+      speed = 850;
+      altitude = 36000;
+    } else if (status === 'Arrived') {
+      progress = 1.0;
+      speed = 0;
+      altitude = 0;
+    } else if (status === 'Delayed') {
+      progress = 0.08;
+      speed = 0;
+      altitude = 0;
+    } else if (status === 'Cancelled') {
+      progress = 0.0;
+      speed = 0;
+      altitude = 0;
+    }
+
+    // Update progress bar
+    const pct = Math.round(progress * 100);
+    const pBar = document.getElementById('progressBar');
+    const pCursor = document.getElementById('planeCursor');
+    if (pBar) pBar.style.width = pct + '%';
+    if (pCursor) pCursor.style.left = pct + '%';
+
+    // Telemetry HUD updates
+    const flownKm = Math.round(totalDistance * progress);
+    const remKm = Math.max(0, totalDistance - flownKm);
+
+    document.getElementById('valSpeed').innerHTML = speed + ' <span class="telemetry-unit">km/h</span>';
+    document.getElementById('valSpeedKts').innerText = Math.round(speed * 0.539957) + ' kts';
+    document.getElementById('valAltitude').innerHTML = altitude.toLocaleString() + ' <span class="telemetry-unit">ft</span>';
+    document.getElementById('valFlightLevel').innerText = altitude > 0 ? 'FL' + Math.round(altitude / 100) : 'GND';
+    document.getElementById('valDistanceFlown').innerHTML = flownKm + ' <span class="telemetry-unit">km</span>';
+    document.getElementById('valDistanceRem').innerText = remKm + ' km remaining';
+
+    // Initialize Map
+    radarMap = L.map('live-flight-radar-map', {
+      center: [(origLat + destLat) / 2, (origLng + destLng) / 2],
       zoom: 5
     });
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 18,
       attribution: '&copy; OpenStreetMap contributors'
-    }).addTo(trackMap);
+    }).addTo(radarMap);
 
-    const origLat = {{ flight.origin_airport.latitude }};
-    const origLng = {{ flight.origin_airport.longitude }};
-    const destLat = {{ flight.destination_airport.latitude }};
-    const destLng = {{ flight.destination_airport.longitude }};
+    // Custom Origin & Destination Markers
+    const originIcon = L.divIcon({
+      className: 'custom-map-icon',
+      html: '<div style="background:#0B1739; color:#FFF; padding:3px 8px; border-radius:4px; font-weight:700; font-size:11px; border:2px solid #FFF; box-shadow:0 2px 6px rgba(0,0,0,0.3);"><i class="bi bi-geo-alt-fill text-danger me-1"></i>{{ flight.origin_airport.iata_code or "DEP" }}</div>',
+      iconSize: [50, 24],
+      iconAnchor: [25, 12]
+    });
 
-    L.marker([origLat, origLng]).addTo(trackMap).bindPopup("{{ flight.origin_airport.city }}");
-    L.marker([destLat, destLng]).addTo(trackMap).bindPopup("{{ flight.destination_airport.city }}");
+    const destIcon = L.divIcon({
+      className: 'custom-map-icon',
+      html: '<div style="background:#1769FF; color:#FFF; padding:3px 8px; border-radius:4px; font-weight:700; font-size:11px; border:2px solid #FFF; box-shadow:0 2px 6px rgba(0,0,0,0.3);"><i class="bi bi-geo-alt-fill text-warning me-1"></i>{{ flight.destination_airport.iata_code or "ARR" }}</div>',
+      iconSize: [50, 24],
+      iconAnchor: [25, 12]
+    });
 
-    const line = L.polyline([[origLat, origLng], [destLat, destLng]], {
+    L.marker([origLat, origLng], { icon: originIcon }).addTo(radarMap)
+      .bindPopup("<b>{{ flight.origin_airport.name }} ({{ flight.origin_airport.iata_code }})</b><br>{{ flight.origin_airport.city }}, {{ flight.origin_airport.state }}<br>Departure: {{ flight.scheduled_departure.strftime('%H:%M') }}");
+
+    L.marker([destLat, destLng], { icon: destIcon }).addTo(radarMap)
+      .bindPopup("<b>{{ flight.destination_airport.name }} ({{ flight.destination_airport.iata_code }})</b><br>{{ flight.destination_airport.city }}, {{ flight.destination_airport.state }}<br>Arrival: {{ flight.scheduled_arrival.strftime('%H:%M') }}");
+
+    // Flight Path
+    flightLine = L.polyline([[origLat, origLng], [destLat, destLng]], {
       color: '#1769FF',
       weight: 3,
-      dashArray: '6, 6'
-    }).addTo(trackMap);
+      dashArray: '8, 8',
+      opacity: 0.85
+    }).addTo(radarMap);
 
-    trackMap.fitBounds(line.getBounds(), { padding: [40, 40] });
+    // Aircraft Marker with Radar Pulse
+    const curLat = origLat + (destLat - origLat) * progress;
+    const curLng = origLng + (destLng - origLng) * progress;
+
+    const planeIcon = L.divIcon({
+      className: 'radar-plane-container',
+      html: '<div class="radar-plane-icon"><i class="bi bi-airplane-fill"></i></div>',
+      iconSize: [36, 36],
+      iconAnchor: [18, 18]
+    });
+
+    planeMarker = L.marker([curLat, curLng], { icon: planeIcon }).addTo(radarMap)
+      .bindPopup("<b>Flight {{ flight.flight_number }}</b><br>Altitude: " + altitude.toLocaleString() + " ft<br>Ground Speed: " + speed + " km/h<br>Status: {{ flight.status }}");
+
+    radarMap.fitBounds(flightLine.getBounds(), { padding: [50, 50] });
+
+    // Live ETA Countdown Ticker
+    const arrTime = new Date("{{ flight.scheduled_arrival.isoformat() }}Z").getTime();
+    function updateCountdown() {
+      const now = new Date().getTime();
+      const diff = arrTime - now;
+
+      const countdownEl = document.getElementById('liveCountdown');
+      if (!countdownEl) return;
+
+      if (status === 'Arrived') {
+        countdownEl.innerText = 'TOUCHDOWN RECORDED &bull; ON STAND';
+        countdownEl.className = 'badge bg-success bg-opacity-10 text-success border border-success px-3 py-1 font-monospace';
+      } else if (status === 'Cancelled') {
+        countdownEl.innerText = 'FLIGHT OPERATIONS CANCELLED';
+        countdownEl.className = 'badge bg-danger bg-opacity-10 text-danger border border-danger px-3 py-1 font-monospace';
+      } else if (diff <= 0) {
+        countdownEl.innerText = 'ESTIMATED ARRIVAL IMMINENT';
+      } else {
+        const hours = Math.floor(diff / (1000 * 60 * 60));
+        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+        countdownEl.innerText = 'ETA IN: ' + hours + 'h ' + minutes + 'm ' + seconds + 's';
+      }
+    }
+    updateCountdown();
+    setInterval(updateCountdown, 1000);
   });
+
+  function recenterMap() {
+    if (radarMap && flightLine) {
+      radarMap.fitBounds(flightLine.getBounds(), { padding: [50, 50] });
+    }
+  }
 </script>
 {% endblock %}

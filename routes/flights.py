@@ -81,24 +81,36 @@ def details(flight_id):
 def track_search():
     flight_num = request.args.get('flight_number', '').strip().upper()
     status_filter = request.args.get('status', 'All')
+    origin_id = request.args.get('origin_id', type=int)
+    dest_id = request.args.get('dest_id', type=int)
+    airline_id = request.args.get('airline_id', type=int)
 
-    flights = []
-    if flight_num or status_filter != 'All':
-        query = Flight.query
-        if flight_num:
-            query = query.filter(Flight.flight_number.ilike(f"%{flight_num}%"))
-        if status_filter != 'All':
-            query = query.filter_by(status=status_filter)
-        flights = query.order_by(Flight.scheduled_departure.asc()).all()
-    else:
-        # Default show today's active flights
-        flights = Flight.query.order_by(Flight.scheduled_departure.asc()).limit(15).all()
+    query = Flight.query
+    if flight_num:
+        query = query.filter(Flight.flight_number.ilike(f"%{flight_num}%"))
+    if status_filter != 'All':
+        query = query.filter_by(status=status_filter)
+    if origin_id:
+        query = query.filter_by(origin_airport_id=origin_id)
+    if dest_id:
+        query = query.filter_by(destination_airport_id=dest_id)
+    if airline_id:
+        query = query.filter_by(airline_id=airline_id)
+
+    flights = query.order_by(Flight.scheduled_departure.asc()).limit(60).all()
+    all_airports = Airport.query.filter_by(operational_status='Operational').order_by(Airport.city.asc()).all()
+    all_airlines = Airline.query.order_by(Airline.name.asc()).all()
 
     return render_template(
         'flight_track.html',
         flights=flights,
         flight_number_query=flight_num,
-        status_filter=status_filter
+        status_filter=status_filter,
+        origin_id=origin_id,
+        dest_id=dest_id,
+        airline_id=airline_id,
+        airports=all_airports,
+        airlines=all_airlines
     )
 
 @flights_bp.route('/flights/<int:flight_id>/track')

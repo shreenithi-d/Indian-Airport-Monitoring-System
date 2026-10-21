@@ -11,9 +11,9 @@ class User(UserMixin, db.Model):
     email = db.Column(db.String(120), unique=True, nullable=False, index=True)
     password_hash = db.Column(db.String(256), nullable=False)
     phone_number = db.Column(db.String(20), nullable=True)
-    role = db.Column(db.String(20), nullable=False, default='passenger')  # 'passenger', 'admin'
+    role = db.Column(db.String(20), nullable=False, default='passenger', index=True)  # 'passenger', 'admin'
     account_status = db.Column(db.String(20), nullable=False, default='active')  # 'active', 'suspended'
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     # Relationships

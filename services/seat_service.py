@@ -1,8 +1,150 @@
-from datetime import datetime
+from datetime import datetime, timedelta
+import random
+import string
 from extensions import db
 from models.aircraft import Aircraft, AircraftSeat
 from models.flight import Flight
-from models.booking import SeatReservation, Passenger
+from models.booking import Booking, SeatReservation, Passenger
+from models.user import User
+
+SAMPLE_MALE_NAMES = [
+    "Rahul Verma", "Aarav Sharma", "Rohan Mehta", "Vikram Patel", "Rajesh Iyer",
+    "Amit Gupta", "Suresh Kumar", "Aditya Singh", "Karthik Nair", "Deepak Joshi",
+    "Manish Agarwal", "Nikhil Rao", "Sachin Bhatia", "Pranav Deshmukh", "Gaurav Malhotra",
+    "Varun Kapoor", "Siddharth Jain", "Anand Kulkarni", "Mohit Bansal", "Harsh Vardhan"
+]
+
+SAMPLE_FEMALE_NAMES = [
+    "Priya Sharma", "Ananya Verma", "Sneha Patel", "Pooja Mehta", "Deepika Iyer",
+    "Sunita Gupta", "Kavita Singh", "Aishwarya Nair", "Neha Joshi", "Shreya Agarwal",
+    "Divya Rao", "Ritu Bhatia", "Pallavi Deshmukh", "Komal Malhotra", "Tanvi Kapoor",
+    "Rhea Jain", "Meenakshi Kulkarni", "Swati Bansal", "Aditi Rao", "Ishita Sen"
+]
+
+def ensure_flight_half_filled_seats(flight):
+    """
+    Guarantees that whenever seats for any flight are examined (especially Scheduled or Boarding),
+    it is exactly half-filled (~48% - 52% of seat capacity),
+    with Male seats in Blue (#DCEBFF / #4385E8),
+    Female seats in Pink (#FFE0EC / #E66B9A),
+    and the remaining half of the seats 100% available for booking.
+    """
+    if not flight or not flight.aircraft:
+        return
+
+    # Ensure seats exist
+    if flight.aircraft.seats.count() == 0:
+        generate_aircraft_seats(flight.aircraft_id)
+
+    all_seats = AircraftSeat.query.filter_by(
+        aircraft_id=flight.aircraft_id,
+        is_active=True,
+        restriction_status='Available'
+    ).order_by(AircraftSeat.row_number.asc(), AircraftSeat.seat_letter.asc()).all()
+
+    if not all_seats:
+        return
+
+    total_seats = len(all_seats)
+    target_booked = total_seats // 2  # Exactly half filled
+
+    confirmed_res = SeatReservation.query.filter_by(
+        flight_id=flight.id,
+        reservation_status='Confirmed'
+    ).all()
+
+    # If already around half filled, keep as is
+    if target_booked - 3 <= len(confirmed_res) <= target_booked + 3:
+        return
+
+    # Pick alternating half of the seats across rows
+    seats_to_book = []
+    for seat in all_seats:
+        if (seat.row_number + ord(seat.seat_letter)) % 2 == 0:
+            seats_to_book.append(seat)
+        if len(seats_to_book) >= target_booked:
+            break
+
+    if len(seats_to_book) < target_booked:
+        for seat in all_seats:
+            if seat not in seats_to_book:
+                seats_to_book.append(seat)
+            if len(seats_to_book) >= target_booked:
+                break
+
+    # Get demo user
+    demo_user = User.query.filter_by(role='passenger').first() or User.query.first()
+    user_id = demo_user.id if demo_user else 1
+
+    # Clear old reservations for this flight to set clean exact half
+    SeatReservation.query.filter_by(flight_id=flight.id).delete()
+
+    seat_idx = 0
+    while seat_idx < len(seats_to_book):
+        group_size = random.choices([1, 2, 3], weights=[50, 40, 10])[0]
+        group = seats_to_book[seat_idx : seat_idx + group_size]
+        seat_idx += len(group)
+        if not group:
+            break
+
+        ref = "IN-" + ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
+        pax_count = len(group)
+        base_tot = flight.base_fare * pax_count
+        seat_chg = sum(s.additional_charge for s in group)
+        taxes = round(base_tot * 0.05 + 250.0 * pax_count, 2)
+        total_amt = round(base_tot + seat_chg + taxes, 2)
+
+        booking = Booking(
+            booking_reference=ref,
+            user_id=user_id,
+            flight_id=flight.id,
+            booking_status='Confirmed',
+            passenger_count=pax_count,
+            base_fare_total=base_tot,
+            seat_charge_total=seat_chg,
+            taxes_and_fees=taxes,
+            total_amount=total_amt,
+            payment_mode="Demonstration Payment",
+            payment_status="Completed",
+            created_at=flight.scheduled_departure - timedelta(days=1)
+        )
+        db.session.add(booking)
+        db.session.flush()
+
+        for s in group:
+            roll = random.random()
+            if roll < 0.48:
+                gender = "Male"
+                name = random.choice(SAMPLE_MALE_NAMES)
+            elif roll < 0.96:
+                gender = "Female"
+                name = random.choice(SAMPLE_FEMALE_NAMES)
+            else:
+                gender = "Prefer not to say"
+                name = random.choice(SAMPLE_MALE_NAMES)
+
+            pax = Passenger(
+                booking_id=booking.id,
+                full_name=name,
+                gender_selection=gender,
+                age=random.randint(20, 65),
+                seat_number=s.seat_code,
+                cabin_class=s.cabin_class
+            )
+            db.session.add(pax)
+            db.session.flush()
+
+            res = SeatReservation(
+                flight_id=flight.id,
+                aircraft_seat_id=s.id,
+                passenger_id=pax.id,
+                booking_id=booking.id,
+                reservation_status='Confirmed',
+                created_at=booking.created_at
+            )
+            db.session.add(res)
+
+    db.session.commit()
 
 def generate_aircraft_seats(aircraft_id):
     """Populates standard seat records for an aircraft if none exist."""
@@ -84,6 +226,9 @@ def get_flight_seat_map(flight_id, current_user_id=None):
     # Ensure seats exist
     if flight.aircraft.seats.count() == 0:
         generate_aircraft_seats(flight.aircraft_id)
+
+    # Ensure half-filled seats when examined
+    ensure_flight_half_filled_seats(flight)
 
     # Fetch all seats ordered by row and letter
     seats = AircraftSeat.query.filter_by(aircraft_id=flight.aircraft_id, is_active=True)\

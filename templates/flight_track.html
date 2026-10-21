@@ -12,19 +12,44 @@
 
     <form method="GET" action="{{ url_for('flights.track_search') }}">
       <div class="row g-2 align-items-end">
-        <div class="col-md-6">
+        <div class="col-md-3">
           <label class="form-label small fw-bold text-muted">Flight Number</label>
           <div class="input-group">
             <span class="input-group-text bg-light"><i class="bi bi-search"></i></span>
-            <input type="text" name="flight_number" class="form-control" placeholder="e.g. AI-101, 6E-204, UK-812" value="{{ flight_number_query }}">
+            <input type="text" name="flight_number" class="form-control" placeholder="e.g. AI-101, 6E-204" value="{{ flight_number_query }}">
           </div>
         </div>
 
-        <div class="col-md-4">
+        <div class="col-md-3">
+          <label class="form-label small fw-bold text-muted">Origin Indian Airport</label>
+          <select name="origin_id" class="form-select" onchange="this.form.submit()">
+            <option value="">All Indian Hubs</option>
+            {% for a in airports %}
+              <option value="{{ a.id }}" {% if origin_id == a.id %}selected{% endif %}>
+                {{ a.city }} ({{ a.iata_code or a.icao_code }})
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="col-md-3">
+          <label class="form-label small fw-bold text-muted">Destination Airport</label>
+          <select name="dest_id" class="form-select" onchange="this.form.submit()">
+            <option value="">All Destinations</option>
+            {% for a in airports %}
+              <option value="{{ a.id }}" {% if dest_id == a.id %}selected{% endif %}>
+                {{ a.city }} ({{ a.iata_code or a.icao_code }})
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="col-md-2">
           <label class="form-label small fw-bold text-muted">Operational Status</label>
-          <select name="status" class="form-select">
-            <option value="All" {% if status_filter == 'All' %}selected{% endif %}>All Active Statuses</option>
+          <select name="status" class="form-select" onchange="this.form.submit()">
+            <option value="All" {% if status_filter == 'All' %}selected{% endif %}>All Statuses</option>
             <option value="Scheduled" {% if status_filter == 'Scheduled' %}selected{% endif %}>Scheduled</option>
+            <option value="Check-in open" {% if status_filter == 'Check-in open' %}selected{% endif %}>Check-in</option>
             <option value="Boarding" {% if status_filter == 'Boarding' %}selected{% endif %}>Boarding</option>
             <option value="Departed" {% if status_filter == 'Departed' %}selected{% endif %}>Departed</option>
             <option value="In flight" {% if status_filter == 'In flight' %}selected{% endif %}>In Flight</option>
@@ -33,9 +58,9 @@
           </select>
         </div>
 
-        <div class="col-md-2">
-          <button type="submit" class="btn btn-aviation-primary w-100">
-            <i class="bi bi-radar me-1"></i>Track Flight
+        <div class="col-md-1">
+          <button type="submit" class="btn btn-aviation-primary w-100" title="Search">
+            <i class="bi bi-radar"></i>
           </button>
         </div>
       </div>
