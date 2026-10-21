@@ -53,31 +53,32 @@ def ensure_flight_half_filled_seats(flight):
         reservation_status='Confirmed'
     ).all()
 
-    # If already around half filled, keep as is
-    if target_booked - 3 <= len(confirmed_res) <= target_booked + 3:
+    # If already around half filled or more, keep existing reservations
+    if len(confirmed_res) >= target_booked - 3:
         return
 
-    # Pick alternating half of the seats across rows
+    reserved_seat_ids = {r.aircraft_seat_id for r in confirmed_res}
+    needed_count = target_booked - len(confirmed_res)
+    unreserved_seats = [s for s in all_seats if s.id not in reserved_seat_ids]
+
+    # Pick alternating unreserved seats to bring flight up to half filled
     seats_to_book = []
-    for seat in all_seats:
+    for seat in unreserved_seats:
         if (seat.row_number + ord(seat.seat_letter)) % 2 == 0:
             seats_to_book.append(seat)
-        if len(seats_to_book) >= target_booked:
+        if len(seats_to_book) >= needed_count:
             break
 
-    if len(seats_to_book) < target_booked:
-        for seat in all_seats:
+    if len(seats_to_book) < needed_count:
+        for seat in unreserved_seats:
             if seat not in seats_to_book:
                 seats_to_book.append(seat)
-            if len(seats_to_book) >= target_booked:
+            if len(seats_to_book) >= needed_count:
                 break
 
     # Get demo user
     demo_user = User.query.filter_by(role='passenger').first() or User.query.first()
     user_id = demo_user.id if demo_user else 1
-
-    # Clear old reservations for this flight to set clean exact half
-    SeatReservation.query.filter_by(flight_id=flight.id).delete()
 
     seat_idx = 0
     while seat_idx < len(seats_to_book):

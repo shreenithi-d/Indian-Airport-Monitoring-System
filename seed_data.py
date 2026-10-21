@@ -6,7 +6,7 @@ Populates:
   2. 6 Commercial Indian Airlines
   3. 4 Fleet Aircraft with 612 standard seats
   4. 60+ Realistic commercial scheduled flights across Indian airspace
-  5. 500,000 Realistic Indian Passenger accounts with instant search & pagination
+  5. 100,000 Realistic Indian Passenger accounts with instant search & pagination
   6. Thousands of realistic bookings with booked vs available seats for every flight
      (Male seats in Blue #DCEBFF, Female seats in Pink #FFE0EC, and available seats)
 """
@@ -324,27 +324,23 @@ def run_master_seeding():
         print(f"  [OK] Flights configured: {Flight.query.count()} (Created {created_flight_count} new routes)")
 
     # ── 4. Generate 500,000 Users Fast via Raw SQLite Transactions ───
-    print("\n[Step 4/5] Populating 500,000 Realistic Indian Passenger Accounts...")
+    print("\n[Step 4/5] Populating 100,000 Realistic Indian Passenger Accounts (Git-Optimized <100MB)...")
     conn = sqlite3.connect(DB_PATH)
     conn.execute("PRAGMA synchronous = OFF;")
     conn.execute("PRAGMA journal_mode = MEMORY;")
     cursor = conn.cursor()
 
     # Create indexes for blazing fast query performance
-    cursor.execute("CREATE INDEX IF NOT EXISTS idx_users_role ON users(role);")
-    cursor.execute("CREATE INDEX IF NOT EXISTS idx_users_created_at ON users(created_at);")
-    cursor.execute("CREATE INDEX IF NOT EXISTS idx_users_status ON users(account_status);")
-    cursor.execute("CREATE INDEX IF NOT EXISTS idx_users_name ON users(full_name);")
     conn.commit()
 
     current_users = cursor.execute("SELECT COUNT(*) FROM users;").fetchone()[0]
-    TARGET_USERS = 500000
+    TARGET_USERS = 100000
 
     if current_users < TARGET_USERS:
         needed = TARGET_USERS - current_users
         print(f"  Generating {needed:,} passenger accounts with realistic Indian profiles...")
 
-        # Precompute a standard password hash so all 500,000 users can log in with "Pass@123456"
+        # Precompute a standard password hash so all 100,000 users can log in with "Pass@123456"
         sample_hash = generate_password_hash("Pass@123456")
 
         start_id = current_users + 1

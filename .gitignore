@@ -6,8 +6,10 @@ venv/
 
 # Local SQLite databases
 *.db
+!indian_airports.db
 *.db-wal
 *.db-shm
 
 # Backups
 *.bundle
+*.bak
